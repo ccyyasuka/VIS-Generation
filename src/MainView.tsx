@@ -11,7 +11,6 @@ type ConfigItem = {
 	meta: {
 		width: string;
 		height: string;
-		position: string;
 		left: string;
 		top: string;
 	};
@@ -28,7 +27,6 @@ const MainView: React.FC = () => {
 			meta: {
 				width: '30%',
 				height: '20%',
-				position: 'absolute',
 				left: '25%',
 				top: '15%',
 			},
@@ -38,7 +36,6 @@ const MainView: React.FC = () => {
 			meta: {
 				width: '30%',
 				height: '30%',
-				position: 'absolute',
 				left: '25%',
 				top: '75%',
 			},
@@ -48,7 +45,6 @@ const MainView: React.FC = () => {
 			meta: {
 				width: '30%',
 				height: '30%',
-				position: 'absolute',
 				left: '65%',
 				top: '15%',
 			},
