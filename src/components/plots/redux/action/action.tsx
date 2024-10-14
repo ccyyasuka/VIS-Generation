@@ -1,4 +1,4 @@
-import { messageType } from '../../types';
+import { messageType } from '../../../../types';
 
 export const CHANGE_MESSAGE_ACTION = 'CHANGE_MESSAGE_ACTION';
 

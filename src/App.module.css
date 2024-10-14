@@ -1,8 +1,21 @@
-.App {
+/* .App {
   text-align: center;
+} */
+.app {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+}
+.chat {
+  height: 100%;
+  width: 20%;
+}
+.mainView {
+  flex: 1;
+  position: relative;
 }
 
-.App-logo {
+/* .App-logo {
   height: 40vmin;
   pointer-events: none;
 }
@@ -35,4 +48,4 @@
   to {
     transform: rotate(360deg);
   }
-}
+} */

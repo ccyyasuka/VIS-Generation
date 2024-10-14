@@ -1,4 +1,4 @@
-import { messageType } from '../../types';
+import { messageType } from '../../../../types';
 import { messageActionType } from '../action/action';
 const messageState: messageType = {
 	message: '',
@@ -8,6 +8,7 @@ const messageState: messageType = {
 export const SET_DATASET = 'SET_DATASET';
 
 const messageReducer = (state = messageState, action: messageActionType) => {
+	console.log("Action dispatched: ", action);
 	switch (action.type) {
 		case 'CHANGE_MESSAGE_ACTION':
 			return action.payload;

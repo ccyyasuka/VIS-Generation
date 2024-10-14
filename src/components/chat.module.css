@@ -1,0 +1,32 @@
+.main {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.head {
+  background: #b9b9ff;
+  height: 30px;
+  border-radius: 5px 5px 0px 0px;
+  display: flex;
+  align-items: center;
+}
+.talkFrame {
+  flex: 1 1;
+  display: flex;
+  flex-direction: column;
+  border-right: 2px solid #b9b9ff;
+  overflow: auto;
+}
+.talk {
+  display: flex;
+  font-size: 12px;
+  margin-bottom: 5px;
+}
+.ques {
+  height: 10%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2px 30px;
+  border-right: 2px solid #b9b9ff;
+}
