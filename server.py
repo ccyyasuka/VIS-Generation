@@ -5,7 +5,7 @@ from openai import OpenAI
 import pandas as pd
 import os
 app = Flask(__name__)
-API_KEY = "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"
+API_KEY = ''
 # 启用CORS，允许所有源访问（或你可以指定特定的源）
 CORS(app)
 UPLOAD_FOLDER = r'.\uploads'
