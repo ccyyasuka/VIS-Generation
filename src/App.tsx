@@ -11,8 +11,8 @@ function App() {
   return (
     <div className={style.app}>
       <Provider store={store}>
-        <div>
-          <Upload/>
+        <div className={style.file}>
+          <Upload />
         </div>
         <div className={style.chat}>
           <Chat />

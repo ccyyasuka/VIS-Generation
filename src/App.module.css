@@ -6,6 +6,10 @@
   width: 100vw;
   height: 100vh;
 }
+.file {
+  height: 100%;
+  width: 20%;
+}
 .chat {
   height: 100%;
   width: 20%;

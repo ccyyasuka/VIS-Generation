@@ -28,7 +28,6 @@ export const fetchIniData = createAsyncThunk('data/fetchIniData', async () => {
 export const uploadFileAndSetData = createAsyncThunk(
   'data/uploadFileAndSetData',
   async (file: File) => {
-    console.log('aaaaa')
     const formData = new FormData()
     formData.append('file', file)
 
