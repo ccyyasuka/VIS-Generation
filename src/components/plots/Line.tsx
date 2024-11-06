@@ -5,15 +5,19 @@ import { useDispatch, useSelector } from 'react-redux'
 import { ChangeMessageSetting } from './redux/action/action'
 import _ from 'lodash'
 import { AppState, ReduxProviderWrapper } from './redux/store'
-type DataItem = {
+type LineDataItem = {
   label: string // Typically, this would be a category or time point
   value: number // Value for that point
+  [key: string]: any
 }
 
 function drawLineChart(
-  data: DataItem[],
-  element?: HTMLDivElement,
-  dispatch?: any
+  data: LineDataItem[],
+  element: HTMLSpanElement,
+  dispatch: any,
+  interactionType: string,
+  interactionkey: string, //指明原始key
+  curInteractionKey: string //指明是label还是value
 ): void {
   if (!element) {
     // If no element provided, append a new div to the body
@@ -28,6 +32,8 @@ function drawLineChart(
     const highlightMessage: messageType = {
       hoverOrNot: true,
       message: parseFloat(message.toFixed(2)),
+      interactionType: interactionType || 'default',
+      interactionKey: interactionkey || 'default',
     }
     highlightMessage.interactionType = 'ByValue'
 
@@ -110,8 +116,9 @@ function drawLineChart(
     .attr('fill', 'red') // Color of the circle
     .attr('class', 'points')
     .attr('data-value', (d) => d.value.toFixed(2))
+    .attr('data-label', (d) => d.label)
     .on('mouseenter', (event, d) => {
-      handleHoverThrottled(d.value)
+      handleHoverThrottled(d[curInteractionKey as string])
       svg
         .selectAll('rect')
         .transition()
@@ -125,16 +132,20 @@ function drawLineChart(
       svg.selectAll('rect').transition().duration(150).style('opacity', '1') // 保证透明度回到1
     })
 }
-
+type DataItem = {
+  [key: string]: any
+}
 interface LineProps {
   data: DataItem[]
   width: string
   height: string
   left: string
   top: string
-  position: 'absolute' | 'fixed'
-  interactionType?: string
-  allowedinteractionType?: string
+  x: string
+  y: string
+  interactionType: string
+  interactionKey: string
+  allowedinteractionType: string
 }
 
 const Line: React.FC<LineProps> = ({
@@ -143,8 +154,10 @@ const Line: React.FC<LineProps> = ({
   height,
   left,
   top,
-  position,
+  x,
+  y,
   interactionType,
+  interactionKey,
   allowedinteractionType,
 }) => {
   const chartRef = useRef<HTMLDivElement>(null)
@@ -152,9 +165,22 @@ const Line: React.FC<LineProps> = ({
     (state: AppState) => state.message
   )
   const dispatch = useDispatch()
+  function preprocessData() {
+    return data.map((item) => {
+      return { label: item[x].toString() as string, value: item[y] as number }
+    })
+  }
   useEffect(() => {
     if (chartRef.current) {
-      drawLineChart(data, chartRef.current, dispatch)
+      let curInteractionKey = interactionKey === x ? 'label' : 'value'
+      drawLineChart(
+        preprocessData(),
+        chartRef.current,
+        dispatch,
+        interactionType,
+        interactionKey,
+        curInteractionKey
+      )
     }
   }, [data]) // Dependency array: Redraw chart if 'data' changes
   React.useEffect(() => {
@@ -168,6 +194,14 @@ const Line: React.FC<LineProps> = ({
     if (!allowedinteractionType) {
       return
     }
+    if (curMessage.interactionKey !== undefined) {
+      if (
+        !data.length ||
+        !Object.keys(data[0]).includes(curMessage.interactionKey)
+      ) {
+        return
+      }
+    }
 
     if (curMessage.interactionType === allowedinteractionType) {
       // console.log("debug-data-value", message)
@@ -178,7 +212,9 @@ const Line: React.FC<LineProps> = ({
         .selectAll('.points')
         .filter(function () {
           console.log(+d3.select(this).attr('data-value'))
-          return +d3.select(this).attr('data-value') === curMessage.message
+          if (x === curMessage.interactionKey)
+            return +d3.select(this).attr('data-label') === curMessage.message
+          else return +d3.select(this).attr('data-value') === curMessage.message
         })
         .style('opacity', 1)
     }
@@ -205,7 +241,7 @@ const Line: React.FC<LineProps> = ({
         style={{
           width: width,
           height: height,
-          position: position,
+          position: 'absolute',
           left: left,
           top: top,
         }}></div>

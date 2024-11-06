@@ -5,9 +5,11 @@ from openai import OpenAI
 import pandas as pd
 import os
 app = Flask(__name__)
+# 
 # 启用CORS，允许所有源访问（或你可以指定特定的源）
 CORS(app)
 UPLOAD_FOLDER = r'.\uploads'
+MOCK = True
 responses = [
     "你好，我是智能助手。",
     "你今天过得怎么样？",
@@ -32,6 +34,37 @@ def chat():
     print("***************************************")
 
     # 随机选择一个回复
+    if (MOCK):
+        return jsonify({
+            "role": "system",
+            "content": "clean_responce",
+            "draw_graph": [
+                {
+                    "name": 'Bar',
+                    "meta": {
+                        "width": '40%',
+                        "height": '20%',
+                        "left": '15%',
+                        "top": '5%',
+                    },
+                    "interactionType": 'filter',
+                    "allowedinteractionType": 'ByValue',
+                },
+                {
+                    "name": 'Line',
+                    "meta": {
+                        "width": '30%',
+                        "height": '30%',
+                        "left": '65%',
+                        "top": '15%',
+                    },
+                    "interactionType": 'filter',
+                    "allowedinteractionType": 'ByValue',
+                },
+            ]
+
+        })
+
     gpt_resp = client.chat.completions.create(
         model='gpt-4o-mini',
         messages=user_input,
@@ -44,7 +77,7 @@ def chat():
         clean_responce: str = gpt_resp.choices[0].message.content.strip()
 
     return jsonify({
-        "role": user_input,
+        "role": "system",
         "content": clean_responce
     })
 

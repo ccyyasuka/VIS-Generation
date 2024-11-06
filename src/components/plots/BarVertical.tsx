@@ -5,42 +5,43 @@ import { useDispatch, useSelector } from 'react-redux'
 import { ChangeMessageSetting } from './redux/action/action'
 import _ from 'lodash'
 import { AppState, ReduxProviderWrapper } from './redux/store'
-type DataItem = {
+type BarDataItem = {
+  // qqqq
   label: string
   value: number
+  [key: string]: any
 }
-
+// 纵向柱状图
 function drawBarChart(
-  data: DataItem[],
-  element?: HTMLSpanElement,
-  dispatch?: any,
-  interactionType?: string
+  data: BarDataItem[],
+  element: HTMLSpanElement,
+  dispatch: any,
+  interactionType: string,
+  interactionkey: string, //指明原始key
+  curInteractionKey: string //指明是label还是value
 ): void {
   const handleHover = (message: number) => {
     const highlightMessage: messageType = {
       hoverOrNot: true,
       message: parseFloat(message.toFixed(2)),
       interactionType: interactionType || 'default',
+      interactionKey: interactionkey || 'default',
     }
-    highlightMessage.interactionType = 'ByValue'
 
     dispatch(
       ChangeMessageSetting({
         ...highlightMessage,
       })
     )
-
-    // if (setHighlightMessage) setHighlightMessage(highlightMessage)
   }
   const handleLeave = () => {
     dispatch(ChangeMessageSetting({ message: '', hoverOrNot: false }))
   }
   const handleHoverThrottled = _.throttle(handleHover, 200)
+  
   if (!element) {
-    // If no element provided, append a new span to the body
     element = document.body.appendChild(document.createElement('span'))
   } else {
-    // Clear the element contents
     while (element.firstChild) {
       element.removeChild(element.firstChild)
     }
@@ -50,9 +51,9 @@ function drawBarChart(
     element || document.body.appendChild(document.createElement('span'))
 
   // Set dimensions and margins of the graph
-  const width = container.clientWidth // Use the width of the container
-  const height = container.clientHeight // Use the height of the container
-  const margin = { top: 20, right: 30, bottom: 40, left: 90 }
+  const width = container.clientWidth
+  const height = container.clientHeight
+  const margin = { top: 20, right: 30, bottom: 40, left: 50 }
 
   // Create SVG element inside the container
   const svg = d3
@@ -68,22 +69,22 @@ function drawBarChart(
   const innerWidth = width - margin.left - margin.right
   const innerHeight = height - margin.top - margin.bottom
 
-  // Create X axis
+  // Create X axis (categorical)
   const x = d3
-    .scaleLinear()
-    .domain([0, d3.max(data, (d) => d.value) as number])
+    .scaleBand()
+    .domain(data.map((d) => d.label))
     .range([0, innerWidth])
+    .padding(0.1)
   chart
     .append('g')
     .attr('transform', `translate(0,${innerHeight})`)
     .call(d3.axisBottom(x))
 
-  // Create Y axis
+  // Create Y axis (numerical)
   const y = d3
-    .scaleBand()
-    .range([0, innerHeight])
-    .domain(data.map((d) => d.label))
-    .padding(0.1)
+    .scaleLinear()
+    .domain([0, d3.max(data, (d) => d.value) as number])
+    .range([innerHeight, 0])
   chart.append('g').call(d3.axisLeft(y))
 
   // Bars
@@ -92,51 +93,58 @@ function drawBarChart(
     .data(data)
     .enter()
     .append('rect')
-    .attr('x', 0)
-    .attr('y', (d) => y(d.label) as number)
-    .attr('width', (d) => x(d.value))
-    .attr('height', y.bandwidth())
+    .attr('x', (d) => x(d.label) as number)
+    .attr('y', (d) => y(d.value)) // Start from the top for vertical bars
+    .attr('width', x.bandwidth())
+    .attr('height', (d) => innerHeight - y(d.value)) // Calculate height from value
     .attr('fill', '#69b3a2')
     .attr('class', 'bars')
     .attr('data-value', (d) => d.value.toFixed(2))
+    .attr('data-label', (d) => d.label)
     .on('mouseenter', (event, d) => {
-      handleHoverThrottled(d.value)
+      handleHoverThrottled(d[curInteractionKey as string])
       svg
         .selectAll('rect')
         .transition()
         .duration(150)
-        // .attr('fill', function () {
-        // 	return this === event.currentTarget ? '#3769b1' : '#cbd7ed'; // 对当前rect保持不变，其他的设置透明度为0.618
-        // }) // 当鼠标悬停时设置颜色为 #3769b1
         .style('opacity', function () {
-          return this === event.currentTarget ? '1' : '0.618' // 对当前rect保持不变，其他的设置透明度为0.618
+          return this === event.currentTarget ? '1' : '0.618'
         })
     })
     .on('mouseleave', (event, d) => {
       handleLeave()
-      svg.selectAll('rect').transition().duration(150).style('opacity', '1') // 保证透明度回到1
+      svg.selectAll('rect').transition().duration(150).style('opacity', '1')
     })
 }
 
+
+// qqqq
+type DataItem = {
+  [key: string]: any
+}
 interface BarProps {
   data: DataItem[]
   width: string
   height: string
   left: string
   top: string
-  position: 'absolute' | 'fixed'
-  interactionType?: string
-  allowedinteractionType?: string
+  x: string
+  y: string
+  interactionType: string
+  interactionKey: string
+  allowedinteractionType: string
 }
-
+// qqqq
 const Bar: React.FC<BarProps> = ({
   data,
   width,
   height,
   left,
   top,
-  position,
+  x,
+  y,
   interactionType,
+  interactionKey,
   allowedinteractionType,
 }) => {
   const dispatch = useDispatch()
@@ -144,36 +152,64 @@ const Bar: React.FC<BarProps> = ({
     (state: AppState) => state.message
   )
   const chartRef = useRef<HTMLDivElement>(null)
+  // qqqq
+  function preprocessData() {
+    return data.map((item) => {
+      return { label: item[x].toString() as string, value: item[y] as number }
+    })
+  }
 
   useEffect(() => {
     if (chartRef.current) {
-      drawBarChart(data, chartRef.current, dispatch, interactionType)
+      // qqqq
+      let curInteractionKey = interactionKey === x ? 'label' : 'value'
+      drawBarChart(
+        preprocessData(),
+        chartRef.current,
+        dispatch,
+        interactionType,
+        interactionKey,
+        curInteractionKey
+      )
     }
   }, [data]) // Dependency array: Redraw chart if 'data' changes
+  // 处理接收信息
   React.useEffect(() => {
-    // console.log("debug-data-value", interactionType, message)
+    // qqqq
     console.log('接收到了信息', curMessage)
-    console.log(curMessage.interactionType, allowedinteractionType)
+    console.log(curMessage.interactionType, curMessage.interactionKey)
     if (curMessage === undefined) {
       return
     }
     if (!allowedinteractionType) {
       return
     }
+    if (curMessage.interactionKey !== undefined) {
+      if (
+        !data.length ||
+        !Object.keys(data[0]).includes(curMessage.interactionKey)
+      ) {
+        return
+      }
+    }
 
     if (curMessage.interactionType === allowedinteractionType) {
-      // console.log("debug-data-value", message)
+      // qqqq
       d3.select(chartRef.current).selectAll('.bars').style('opacity', 0.3)
       // 然后找到与message相等的点，将其透明度设置为1
       d3.select(chartRef.current)
         .selectAll('.bars')
         .filter(function () {
           console.log(+d3.select(this).attr('data-value'))
-          return +d3.select(this).attr('data-value') === curMessage.message
+          if (x === curMessage.interactionKey)
+            return +d3.select(this).attr('data-label') === curMessage.message
+          else return +d3.select(this).attr('data-value') === curMessage.message
         })
         .style('opacity', 1)
     }
   }, [curMessage])
+
+  // 处理透明度
   React.useEffect(() => {
     // if (!interactiveRef.current) {
     //   return
@@ -182,19 +218,20 @@ const Bar: React.FC<BarProps> = ({
       return
     }
     if (!curMessage.hoverOrNot) {
-      // noHighlightElement(interactiveRef.current)
       d3.select(chartRef.current)
         .selectAll('*:not(.tooltip)')
         .style('opacity', 1)
     }
   }, [curMessage.hoverOrNot])
+
   return (
     <div
       ref={chartRef}
       style={{
         width: width,
         height: height,
-        position: position,
+        // qqqq
+        position: 'absolute',
         left: left,
         top: top,
       }}></div>

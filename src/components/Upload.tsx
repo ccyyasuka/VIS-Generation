@@ -1,48 +1,51 @@
 import React, { useState, ChangeEvent } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { uploadFileAndSetData } from './redux/dataSlice'
+import { uploadFileAndSetData, setSelectedData } from './redux/dataSlice' // 导入 setSelectedData action
 import { AppDispatch } from './redux/store' // 导入 AppDispatch 类型
 import { InboxOutlined } from '@ant-design/icons'
 import type { UploadProps, RadioChangeEvent } from 'antd'
-import { message, Upload, Table, Radio, Space } from 'antd'
-// import { DataState } from './redux/dataSlice'
+import { message, Upload, Table, Radio, Space, Button } from 'antd'
+import type { TableColumnsType, TableProps } from 'antd'
+import { concat } from 'lodash'
+
 const { Dragger } = Upload
+type TableRowSelection<T extends object = object> =
+  TableProps<T>['rowSelection']
 
 function FileUpload() {
-  // 使用指定了类型的 dispatch
   const dispatch = useDispatch<AppDispatch>()
   const [file, setFile] = useState<File | null>(null)
-  const parseData = useSelector((state: any) => state.data.iniData).data
-  const [columns, setColumns] = useState<{ title: string; dataType: string }[]>(
-    []
-  )
-  const [formattedColumns, setFormattedColumns] = useState<
-    { title: string; dataIndex: string; key: string }[]
-  >([])
-  const [data, setData] = useState<object[]>([])
-  const columnsForDetails = [
+  const iniData = useSelector((state: any) => state.data.iniData) // 获取iniData
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([])
+
+  const columnsForOverview = [
     { title: '列名', dataIndex: 'title', key: 'title' },
     { title: '数据类型', dataIndex: 'dataType', key: 'dataType' },
   ]
+  const columnsForDetail = []
+  if (iniData?.data?.[0]) {
+    for (let item of Object.keys(iniData.data[0])) {
+      columnsForDetail.push({ title: item, dataIndex: item })
+    }
+  }
+
   const [viewMode, setViewMode] = useState<'字段详情' | '数据概览'>('字段详情')
 
-  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files ? e.target.files[0] : null
-    setFile(selectedFile)
-  }
-
-  const handleUpload = () => {
-    if (!file) {
-      alert('请上传文件')
-      return
-    }
-    // 使用带有类型的 dispatch 来处理异步 action
-    dispatch(uploadFileAndSetData(file))
-  }
   const handleViewModeChange = (e: RadioChangeEvent) => {
     setViewMode(e.target.value)
   }
 
+  const onSelectChange = (newSelectedRowKeys: React.Key[]) => {
+    console.log('newSelectedRowKeys', newSelectedRowKeys)
+    setSelectedRowKeys(newSelectedRowKeys)
+  }
+
+  const rowSelection: TableRowSelection = {
+    selectedRowKeys,
+    onChange: onSelectChange,
+  }
+
+  // 上传的 props
   const props: UploadProps = {
     name: 'file',
     multiple: false,
@@ -52,18 +55,6 @@ function FileUpload() {
         .then((result) => {
           if (result.status === '成功') {
             message.success('文件上传成功')
-            // 设置表格列和数据
-            const curFormattedColumns = result.columns.map((col: any) => ({
-              title: col.title,
-              dataIndex: col.title, // 根据列名绑定数据索引
-              key: col.title,
-            }))
-            setFormattedColumns(curFormattedColumns)
-            setColumns(result.columns)
-            setData(result.data)
-            // debugger
-            console.log(result.columns)
-            console.log(result.data)
             onSuccess?.({ code: '200' })
             onProgress?.({ percent: 100 })
           } else {
@@ -89,6 +80,23 @@ function FileUpload() {
     },
   }
 
+  // 点击 "选择" 按钮时筛选数据
+  const handleSelectData = () => {
+    // 使用 selectedRowKeys 从 iniData 中筛选出匹配的数据
+    const filteredData = iniData.data.filter((item: any) =>
+      selectedRowKeys.includes(item.label)
+    )
+
+    // 更新 selectedData
+    dispatch(setSelectedData(filteredData))
+    message.success('数据已选择')
+  }
+  console.log(
+    'columnsForOverviewcolumnsForOverviewcolumnsForOverview',
+    columnsForOverview,
+    iniData.columns
+  )
+
   return (
     <div>
       <Space direction="vertical" size="large">
@@ -106,16 +114,26 @@ function FileUpload() {
           <p className="ant-upload-text">点击或拖拽文件到此处上传</p>
         </Dragger>
 
-        {/* 表格显示，根据viewMode展示不同的内容 */}
+        {/* 表格显示 */}
         {viewMode === '字段详情' ? (
           <Table
-            columns={columnsForDetails}
-            dataSource={columns}
+            rowSelection={rowSelection}
+            columns={columnsForOverview}
+            dataSource={iniData.columns}
             rowKey="title"
           />
         ) : (
-          <Table columns={formattedColumns} dataSource={data} rowKey="id" />
+          <Table
+            columns={columnsForDetail} // 根据需要调整列
+            dataSource={iniData.data} // 数据概览
+            rowKey="title"
+          />
         )}
+
+        {/* 选择按钮 */}
+        <Button type="primary" onClick={handleSelectData}>
+          选择
+        </Button>
       </Space>
     </div>
   )

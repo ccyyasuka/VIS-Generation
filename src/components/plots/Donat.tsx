@@ -17,18 +17,17 @@ function drawPieChart(
   element: HTMLSpanElement,
   dispatch: any,
   interactionType: string,
-  interactionkey: string, //指明原始key
-  curInteractionKey: string //指明是label还是value
+  interactionkey: string, // 指明原始key
+  curInteractionKey: string // 指明是label还是value
 ): void {
   if (!element) {
-    // If no element provided, append a new div to the body
     element = document.body.appendChild(document.createElement('div'))
   } else {
-    // Clear the element contents
     while (element.firstChild) {
       element.removeChild(element.firstChild)
     }
   }
+
   const handleHover = (message: number) => {
     const highlightMessage: messageType = {
       hoverOrNot: true,
@@ -36,24 +35,20 @@ function drawPieChart(
       interactionType: interactionType || 'default',
       interactionKey: interactionkey || 'default',
     }
-    highlightMessage.interactionType = 'ByValue'
-
-    dispatch(
-      ChangeMessageSetting({
-        ...highlightMessage,
-      })
-    )
-
-    // if (setHighlightMessage) setHighlightMessage(highlightMessage)
+    dispatch(ChangeMessageSetting({ ...highlightMessage }))
   }
+
   const handleLeave = () => {
     dispatch(ChangeMessageSetting({ message: '', hoverOrNot: false }))
   }
+
   const handleHoverThrottled = _.throttle(handleHover, 200)
+
   const width = element.clientWidth
   const height = element.clientHeight
   const radius = Math.min(width, height) / 2
 
+  // Create SVG element
   const svg = d3
     .select(element)
     .append('svg')
@@ -69,9 +64,10 @@ function drawPieChart(
     .sort(null)
     .value((d) => d.value)
 
+  // Define arc generator for hollow pie chart
   const arc = d3
     .arc<d3.PieArcDatum<PieDataItem>>()
-    .innerRadius(0)
+    .innerRadius(radius * 0.5) // Set innerRadius to make the pie chart hollow
     .outerRadius(radius)
 
   const arcs = svg
@@ -80,7 +76,7 @@ function drawPieChart(
     .enter()
     .append('g')
     .attr('class', 'arc')
-  console.log('debug-pie(data)', pie(data))
+
   arcs
     .append('path')
     .attr('d', arc)
@@ -88,18 +84,18 @@ function drawPieChart(
     .attr('class', 'arcs')
     .attr('data-value', (d) => d.value.toFixed(2))
     .on('mouseenter', (event, d) => {
-      handleHoverThrottled(d.value)
+      handleHoverThrottled(d.data.value)
       svg
-        .selectAll('rect')
+        .selectAll('path')
         .transition()
         .duration(150)
         .style('opacity', function () {
-          return this === event.currentTarget ? '1' : '0.618' // 对当前rect保持不变，其他的设置透明度为0.618
+          return this === event.currentTarget ? '1' : '0.618'
         })
     })
     .on('mouseleave', (event, d) => {
       handleLeave()
-      svg.selectAll('rect').transition().duration(150).style('opacity', '1') // 保证透明度回到1
+      svg.selectAll('path').transition().duration(150).style('opacity', '1')
     })
 
   arcs
@@ -224,10 +220,10 @@ const Pie: React.FC<PieProps> = ({
   )
 }
 
-const PieWithRedux: React.FC<PieProps> = (props) => (
+const DonatWithRedux: React.FC<PieProps> = (props) => (
   <ReduxProviderWrapper>
     <Pie {...props} />
   </ReduxProviderWrapper>
 )
 
-export default PieWithRedux
+export default DonatWithRedux

@@ -4,17 +4,16 @@ import { messageType } from '../../types'
 import { useDispatch, useSelector } from 'react-redux'
 import { ChangeMessageSetting } from './redux/action/action'
 import _ from 'lodash'
-import { AppState } from './redux/store'
-import { ReduxProviderWrapper } from './redux/store'
-type scatterDataItem = {
-  x: number
-  y: number
+import { AppState, ReduxProviderWrapper } from './redux/store'
+type BarDataItem = {
+  // qqqq
   label: string
+  value: number
   [key: string]: any
 }
-
-function drawScatterPlot(
-  data: scatterDataItem[],
+// 横向柱状图
+function drawBarChart(
+  data: BarDataItem[],
   element: HTMLSpanElement,
   dispatch: any,
   interactionType: string,
@@ -22,6 +21,7 @@ function drawScatterPlot(
   curInteractionKey: string //指明是label还是value
 ): void {
   const handleHover = (message: number) => {
+    // qqqq
     const highlightMessage: messageType = {
       hoverOrNot: true,
       message: parseFloat(message.toFixed(2)),
@@ -34,17 +34,18 @@ function drawScatterPlot(
         ...highlightMessage,
       })
     )
-  }
 
+    // if (setHighlightMessage) setHighlightMessage(highlightMessage)
+  }
   const handleLeave = () => {
     dispatch(ChangeMessageSetting({ message: '', hoverOrNot: false }))
   }
-
   const handleHoverThrottled = _.throttle(handleHover, 200)
-
   if (!element) {
+    // If no element provided, append a new span to the body
     element = document.body.appendChild(document.createElement('span'))
   } else {
+    // Clear the element contents
     while (element.firstChild) {
       element.removeChild(element.firstChild)
     }
@@ -53,10 +54,12 @@ function drawScatterPlot(
   const container =
     element || document.body.appendChild(document.createElement('span'))
 
-  const width = container.clientWidth
-  const height = container.clientHeight
-  const margin = { top: 20, right: 30, bottom: 40, left: 40 }
+  // Set dimensions and margins of the graph
+  const width = container.clientWidth // Use the width of the container
+  const height = container.clientHeight // Use the height of the container
+  const margin = { top: 20, right: 30, bottom: 40, left: 90 }
 
+  // Create SVG element inside the container
   const svg = d3
     .select(container)
     .append('svg')
@@ -70,57 +73,58 @@ function drawScatterPlot(
   const innerWidth = width - margin.left - margin.right
   const innerHeight = height - margin.top - margin.bottom
 
+  // Create X axis
   const x = d3
     .scaleLinear()
-    .domain([0, d3.max(data, (d) => d.x) as number])
+    .domain([0, d3.max(data, (d) => d.value) as number])
     .range([0, innerWidth])
-
-  const y = d3
-    .scaleLinear()
-    .domain([0, d3.max(data, (d) => d.y) as number])
-    .range([innerHeight, 0])
-
   chart
     .append('g')
     .attr('transform', `translate(0,${innerHeight})`)
     .call(d3.axisBottom(x))
 
+  // Create Y axis
+  const y = d3
+    .scaleBand()
+    .range([0, innerHeight])
+    .domain(data.map((d) => d.label))
+    .padding(0.1)
   chart.append('g').call(d3.axisLeft(y))
 
+  // Bars
   chart
-    .selectAll('circle')
+    .selectAll('rect')
     .data(data)
     .enter()
-    .append('circle')
-    .attr('cx', (d) => x(d.x))
-    .attr('cy', (d) => y(d.y))
-    .attr('r', 5)
+    .append('rect')
+    .attr('x', 0)
+    .attr('y', (d) => y(d.label) as number)
+    .attr('width', (d) => x(d.value))
+    .attr('height', y.bandwidth())
     .attr('fill', '#69b3a2')
-    .attr('class', 'dots')
-    .attr('data-y', (d) => d.y.toFixed(2))
-    .attr('data-x', (d) => d.x.toFixed(2))
-    .attr('data-label', (d) => d.label)
+    .attr('class', 'bars')
+    .attr('data-value', (d) => d.value.toFixed(2))
+    .attr('data-label', (d) => d.label) // qqqq
     .on('mouseenter', (event, d) => {
-      handleHoverThrottled(d[curInteractionKey as string])
-      d3.select(event.currentTarget)
+      handleHoverThrottled(d[curInteractionKey as string]) // qqqq
+      svg
+        .selectAll('rect')
         .transition()
         .duration(150)
-        .attr('r', 8)
-        .attr('fill', '#3769b1')
+        .style('opacity', function () {
+          return this === event.currentTarget ? '1' : '0.618' // 对当前rect保持不变，其他的设置透明度为0.618
+        })
     })
     .on('mouseleave', (event, d) => {
       handleLeave()
-      d3.select(event.currentTarget)
-        .transition()
-        .duration(150)
-        .attr('r', 5)
-        .attr('fill', '#69b3a2')
+      svg.selectAll('rect').transition().duration(150).style('opacity', '1') // 保证透明度回到1
     })
 }
+// qqqq
 type DataItem = {
   [key: string]: any
 }
-interface ScatterProps {
+interface BarProps {
   data: DataItem[]
   width: string
   height: string
@@ -128,13 +132,12 @@ interface ScatterProps {
   top: string
   x: string
   y: string
-  label?: string
   interactionType: string
   interactionKey: string
   allowedinteractionType: string
 }
-
-const Scatter: React.FC<ScatterProps> = ({
+// qqqq
+const Bar: React.FC<BarProps> = ({
   data,
   width,
   height,
@@ -142,7 +145,6 @@ const Scatter: React.FC<ScatterProps> = ({
   top,
   x,
   y,
-  label,
   interactionType,
   interactionKey,
   allowedinteractionType,
@@ -152,29 +154,18 @@ const Scatter: React.FC<ScatterProps> = ({
     (state: AppState) => state.message
   )
   const chartRef = useRef<HTMLDivElement>(null)
+  // qqqq
   function preprocessData() {
     return data.map((item) => {
-      return {
-        x: item[x] as number,
-        y: item[y] as number,
-        label: label ? item[label] : ('' as string),
-      }
+      return { label: item[x].toString() as string, value: item[y] as number }
     })
   }
+
   useEffect(() => {
     if (chartRef.current) {
-      let curInteractionKey
-      switch (interactionKey) {
-        case x:
-          curInteractionKey = 'x'
-          break
-        case y:
-          curInteractionKey = 'y'
-          break
-        default:
-          curInteractionKey = 'label'
-      }
-      drawScatterPlot(
+      // qqqq
+      let curInteractionKey = interactionKey === x ? 'label' : 'value'
+      drawBarChart(
         preprocessData(),
         chartRef.current,
         dispatch,
@@ -183,9 +174,12 @@ const Scatter: React.FC<ScatterProps> = ({
         curInteractionKey
       )
     }
-  }, [data])
-
-  useEffect(() => {
+  }, [data]) // Dependency array: Redraw chart if 'data' changes
+  // 处理接收信息
+  React.useEffect(() => {
+    // qqqq
+    console.log('接收到了信息', curMessage)
+    console.log(curMessage.interactionType, curMessage.interactionKey)
     if (curMessage === undefined) {
       return
     }
@@ -202,20 +196,26 @@ const Scatter: React.FC<ScatterProps> = ({
     }
 
     if (curMessage.interactionType === allowedinteractionType) {
-      d3.select(chartRef.current).selectAll('.dots').style('opacity', 0.3)
+      // qqqq
+      d3.select(chartRef.current).selectAll('.bars').style('opacity', 0.3)
+      // 然后找到与message相等的点，将其透明度设置为1
       d3.select(chartRef.current)
-        .selectAll('.dots')
+        .selectAll('.bars')
         .filter(function () {
+          console.log(+d3.select(this).attr('data-value'))
           if (x === curMessage.interactionKey)
-            return +d3.select(this).attr('data-x') === curMessage.message
-          else if (y === curMessage.interactionKey)
-            return +d3.select(this).attr('data-y') === curMessage.message
-          else return +d3.select(this).attr('data-label') === curMessage.message
+            return +d3.select(this).attr('data-label') === curMessage.message
+          else return +d3.select(this).attr('data-value') === curMessage.message
         })
         .style('opacity', 1)
     }
   }, [curMessage])
-  useEffect(() => {
+
+  // 处理透明度
+  React.useEffect(() => {
+    // if (!interactiveRef.current) {
+    //   return
+    // }
     if (curMessage.hoverOrNot === undefined) {
       return
     }
@@ -227,23 +227,23 @@ const Scatter: React.FC<ScatterProps> = ({
   }, [curMessage.hoverOrNot])
 
   return (
-    <ReduxProviderWrapper>
-      <div
-        ref={chartRef}
-        style={{
-          width: width,
-          height: height,
-          position: 'absolute',
-          left: left,
-          top: top,
-        }}></div>
-    </ReduxProviderWrapper>
+    <div
+      ref={chartRef}
+      style={{
+        width: width,
+        height: height,
+        // qqqq
+        position: 'absolute',
+        left: left,
+        top: top,
+      }}></div>
   )
 }
-const ScatterWithRedux: React.FC<ScatterProps> = (props) => (
+const BarWithRedux: React.FC<BarProps> = (props) => (
   <ReduxProviderWrapper>
-    <Scatter {...props} />
+    <Bar {...props} />
   </ReduxProviderWrapper>
 )
 
-export default ScatterWithRedux
+export default BarWithRedux
+// export default Bar
