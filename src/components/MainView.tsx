@@ -25,145 +25,160 @@ type ConfigItem = {
   [key: string]: any
 }
 const MainView: React.FC = () => {
-  // const { selectedData, config } = useSelector((state: any) => state.data)
-  // const data: DataItem[] = selectedData
+  const { selectedData, config } = useSelector((state: any) => state.data)
+  console.log('selectedData, config', selectedData, config)
+  const data: any[] = selectedData
 
-  // const curConfig: ConfigItem[] = config
+  const curConfig: ConfigItem[] = config
 
-  const data: any = [
-    { year: '2022', height: 80, weight: 120, value: 20 },
-    { year: '2023', height: 180, weight: 160, value: 10 },
-    { year: '2024', height: 280, weight: 220, value: 60 },
-  ]
+  // const data: any = [
+  //   { year: '2022', height: 80, weight: 120, value: 20 },
+  //   { year: '2023', height: 180, weight: 160, value: 10 },
+  //   { year: '2024', height: 280, weight: 220, value: 60 },
+  // ]
+  // const data: any = [
+  //   { year: '2022', height: 80, weight: 120, value: 20,tag:'a' },
+  //   { year: '2022', height: 180, weight: 160, value: 10,tag:'b' },
+  //   { year: '2022', height: 280, weight: 220, value: 60,tag:'c' },
+  //   { year: '2023', height: 40, weight: 120, value: 20,tag:'a' },
+  //   { year: '2023', height: 20, weight: 160, value: 10,tag:'b' },
+  //   { year: '2023', height: 180, weight: 220, value: 60,tag:'c' },
+  //   { year: '2024', height: 90, weight: 120, value: 20,tag:'a' },
+  //   { year: '2024', height: 30, weight: 160, value: 10,tag:'b' },
+  //   { year: '2024', height: 110, weight: 220, value: 60,tag:'c' },
+  // ]
+
   // // 历史行为习惯
   // // assistant api 大模型选择参数
-  const curConfig: ConfigItem[] = [
-    // {
-    //   name: 'BarRight',
-    //   meta: {
-    //     width: '40%',
-    //     height: '20%',
-    //     left: '15%',
-    //     top: '5%',
-    //   },
-    //   x: 'year',
-    //   y: 'height',
-    //   interactionType: 'filter',
-    //   interactionKey: 'height',
-    //   allowedinteractionType: 'filter',
-    // },
-    {
-      name: 'BarVertical',
-      meta: {
-        width: '20%',
-        height: '60%',
-        left: '15%',
-        top: '5%',
-      },
-      x: 'year',
-      y: 'height',
-      interactionType: 'filter',
-      interactionKey: 'height',
-      allowedinteractionType: 'filter',
-    },
-    {
-      name: 'Donat',
-      meta: {
-        width: '30%',
-        height: '30%',
-        left: '25%',
-        top: '55%',
-      },
-      x: 'year',
-      y: 'height',
-      interactionType: 'filter',
-      interactionKey: 'height',
-      allowedinteractionType: 'filter',
-    },
-    {
-      name: 'Line',
-      meta: {
-        width: '30%',
-        height: '30%',
-        left: '65%',
-        top: '15%',
-      },
-      x: 'year',
-      y: 'height',
-      interactionType: 'filter',
-      interactionKey: 'height',
-      allowedinteractionType: 'filter',
-    },
-    {
-      name: 'Scatter',
-      meta: {
-        width: '30%',
-        height: '30%',
-        left: '15%',
-        top: '85%',
-      },
-      x: 'height',
-      y: 'weight',
-      z: 'value',
-      interactionType: 'filter',
-      interactionKey: 'height',
-      allowedinteractionType: 'filter',
-    },
-    // {
-    //   name: 'Area',
-    //   meta: {
-    //     width: '30%',
-    //     height: '30%',
-    //     left: '25%',
-    //     top: '35%',
-    //   },
-    //   interactionType: 'filter',
-    //   allowedinteractionType: 'ByValue',
-    // },
-  ]
+  // const curConfig: ConfigItem[] = [
+  //   {
+  //     name: 'BarRight',
+  //     meta: {
+  //       width: '40%',
+  //       height: '20%',
+  //       left: '15%',
+  //       top: '5%',
+  //     },
+  //     x: 'year',
+  //     y: 'height',
+  //     interactionType: 'filter',
+  //     interactionKey: 'height',
+  //     allowedinteractionType: 'filter',
+  //   },
+  //   {
+  //     name: 'BarVertical',
+  //     meta: {
+  //       width: '20%',
+  //       height: '60%',
+  //       left: '15%',
+  //       top: '5%',
+  //     },
+  //     x: 'year',
+  //     y: 'height',
+  //     interactionType: 'filter',
+  //     interactionKey: 'height',
+  //     allowedinteractionType: 'filter',
+  //   },
+  //   {
+  //     name: 'Donat',
+  //     meta: {
+  //       width: '30%',
+  //       height: '30%',
+  //       left: '25%',
+  //       top: '55%',
+  //     },
+  //     x: 'year',
+  //     y: 'height',
+  //     interactionType: 'filter',
+  //     interactionKey: 'height',
+  //     allowedinteractionType: 'filter',
+  //   },
+  //   {
+  //     name: 'Line',
+  //     meta: {
+  //       width: '30%',
+  //       height: '30%',
+  //       left: '65%',
+  //       top: '15%',
+  //     },
+  //     x: 'year',
+  //     y: 'height',
+  //     interactionType: 'filter',
+  //     interactionKey: 'height',
+  //     allowedinteractionType: 'filter',
+  //   },
+  //   {
+  //     name: 'Scatter',
+  //     meta: {
+  //       width: '30%',
+  //       height: '30%',
+  //       left: '15%',
+  //       top: '85%',
+  //     },
+  //     x: 'height',
+  //     y: 'weight',
+  //     z: 'value',
+  //     interactionType: 'filter',
+  //     interactionKey: 'height',
+  //     allowedinteractionType: 'filter',
+  //   },
+  //   // {
+  //   //   name: 'Area',
+  //   //   meta: {
+  //   //     width: '30%',
+  //   //     height: '30%',
+  //   //     left: '25%',
+  //   //     top: '35%',
+  //   //   },
+  //   //   interactionType: 'filter',
+  //   //   allowedinteractionType: 'ByValue',
+  //   // },
+  // ]
 
   if (data && curConfig) {
-    const renderComponents = curConfig.map((item, index) => {
-      let Component = null
-      if (item.name === 'BarRight') {
-        Component = BarRight
-      }
-      if (item.name === 'BarVertical') {
-        Component = BarVertical
-      }
-      if (item.name === 'Line') {
-        Component = Line
-      }
-      if (item.name === 'Pie') {
-        Component = Pie
-      }
-      if (item.name === 'Donat') {
-        Component = Donat
-      }
-      if (item.name === 'Scatter') {
-        Component = Scatter
-      }
-      // if (item.name === 'Area') {
-      //   Component = Area
-      // }
+    const renderComponents = curConfig.map(
+      (item: ConfigItem, index: number) => {
+        let Component = null
+        if (item.name === 'BarRight') {
+          Component = BarRight
+        }
+        if (item.name === 'BarVertical') {
+          Component = BarVertical
+        }
+        if (item.name === 'Line') {
+          Component = Line
+        }
+        if (item.name === 'Pie') {
+          Component = Pie
+        }
+        if (item.name === 'Donat') {
+          Component = Donat
+        }
+        if (item.name === 'Scatter') {
+          Component = Scatter
+        }
+        // if (item.name === 'Area') {
+        //   Component = Area
+        // }
 
-      return Component ? (
-        <Component
-          key={index}
-          data={data as any}
-          width={item.meta.width}
-          height={item.meta.height}
-          left={item.meta.left}
-          top={item.meta.top}
-          x={item.x}
-          y={item.y}
-          interactionType={item.interactionType}
-          interactionKey={item.interactionKey}
-          allowedinteractionType={item.allowedinteractionType}
-          {...(item.name === 'Scatter' ? { label: item.label || '' } : {})}
-        />
-      ) : null
-    })
+        return Component ? (
+          <Component
+            key={index}
+            data={data as any}
+            width={item.meta.width}
+            height={item.meta.height}
+            left={item.meta.left}
+            top={item.meta.top}
+            x={item.x}
+            y={item.y}
+            interactionType={item.interactionType}
+            interactionKey={item.interactionKey}
+            allowedinteractionType={item.allowedinteractionType}
+            {...(item.name === 'Scatter' ? { label: item.label || '' } : {})}
+          />
+        ) : null
+      }
+    )
 
     return <div>{renderComponents}</div>
   }

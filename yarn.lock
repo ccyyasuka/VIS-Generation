@@ -2530,6 +2530,13 @@
     "@types/prop-types" "*"
     "csstype" "^3.0.2"
 
+"@types/redux-thunk@^2.1.0":
+  "integrity" "sha512-8M+kcrnZQYO3A40d8a1lieBFur/ab8EXHqa2dGMQqsmBaVCbNp3gd8ed/HuSjLoLA63ov/trXaXWlkiKVF4VUw=="
+  "resolved" "https://registry.npmmirror.com/@types/redux-thunk/-/redux-thunk-2.1.0.tgz"
+  "version" "2.1.0"
+  dependencies:
+    "redux-thunk" "*"
+
 "@types/resolve@1.17.1":
   "integrity" "sha512-yy7HuzQhj0dhGpD8RLXSZWEkLsV9ibvxvi6EiJ3bkqLAO1RGo0WbkWQiwpRlSFymTJRz0d3k5LM3kkx8ArDbLw=="
   "resolved" "https://registry.npmmirror.com/@types/resolve/-/resolve-1.17.1.tgz"
@@ -9205,7 +9212,7 @@
     "indent-string" "^4.0.0"
     "strip-indent" "^3.0.0"
 
-"redux-thunk@^3.1.0":
+"redux-thunk@*", "redux-thunk@^3.1.0":
   "integrity" "sha512-NW2r5T6ksUKXCabzhL9z+h206HQw/NJkcLm1GPImRQ8IzfXwRGqjVhKJGauHirT0DAuyy6hjdnMZaRoAcy0Klw=="
   "resolved" "https://registry.npmmirror.com/redux-thunk/-/redux-thunk-3.1.0.tgz"
   "version" "3.1.0"

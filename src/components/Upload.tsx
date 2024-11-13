@@ -1,12 +1,11 @@
-import React, { useState, ChangeEvent } from 'react'
+import React, { useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { uploadFileAndSetData, setSelectedData } from './redux/dataSlice' // 导入 setSelectedData action
-import { AppDispatch } from './redux/store' // 导入 AppDispatch 类型
+import { uploadFileAndSetData, updateKV } from './redux/dataSlice'
+import { AppDispatch } from './redux/store'
 import { InboxOutlined } from '@ant-design/icons'
 import type { UploadProps, RadioChangeEvent } from 'antd'
 import { message, Upload, Table, Radio, Space, Button } from 'antd'
-import type { TableColumnsType, TableProps } from 'antd'
-import { concat } from 'lodash'
+import type { TableProps } from 'antd'
 
 const { Dragger } = Upload
 type TableRowSelection<T extends object = object> =
@@ -14,29 +13,28 @@ type TableRowSelection<T extends object = object> =
 
 function FileUpload() {
   const dispatch = useDispatch<AppDispatch>()
-  const [file, setFile] = useState<File | null>(null)
-  const iniData = useSelector((state: any) => state.data.iniData) // 获取iniData
+  const iniData = useSelector((state: any) => state.data.iniData)
+  const [viewMode, setViewMode] = useState<'字段详情' | '数据概览'>('字段详情')
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([])
 
   const columnsForOverview = [
     { title: '列名', dataIndex: 'title', key: 'title' },
     { title: '数据类型', dataIndex: 'dataType', key: 'dataType' },
   ]
-  const columnsForDetail = []
-  if (iniData?.data?.[0]) {
-    for (let item of Object.keys(iniData.data[0])) {
-      columnsForDetail.push({ title: item, dataIndex: item })
-    }
-  }
 
-  const [viewMode, setViewMode] = useState<'字段详情' | '数据概览'>('字段详情')
+  const columnsForDetail = iniData?.data?.[0]
+    ? Object.keys(iniData.data[0]).map((key) => ({
+        title: key,
+        dataIndex: key,
+        key,
+      }))
+    : []
 
   const handleViewModeChange = (e: RadioChangeEvent) => {
     setViewMode(e.target.value)
   }
 
   const onSelectChange = (newSelectedRowKeys: React.Key[]) => {
-    console.log('newSelectedRowKeys', newSelectedRowKeys)
     setSelectedRowKeys(newSelectedRowKeys)
   }
 
@@ -45,27 +43,24 @@ function FileUpload() {
     onChange: onSelectChange,
   }
 
-  // 上传的 props
-  const props: UploadProps = {
+  const uploadProps: UploadProps = {
     name: 'file',
     multiple: false,
-    customRequest: ({ file, onSuccess, onError, onProgress }) => {
-      dispatch(uploadFileAndSetData(file as File))
-        .unwrap()
-        .then((result) => {
-          if (result.status === '成功') {
-            message.success('文件上传成功')
-            onSuccess?.({ code: '200' })
-            onProgress?.({ percent: 100 })
-          } else {
-            message.error('文件上传失败')
-            onError?.(new Error('上传失败'))
-          }
-        })
-        .catch(() => {
-          onError?.(new Error('上传失败'))
+    customRequest: async ({ file, onSuccess, onError, onProgress }) => {
+      try {
+        const result = await dispatch(uploadFileAndSetData(file as File) as any)
+        if (result.status === '成功') {
+          message.success('文件上传成功')
+          onSuccess?.({ code: '200' })
+          onProgress?.({ percent: 100 })
+        } else {
           message.error('文件上传失败')
-        })
+          onError?.(new Error('上传失败'))
+        }
+      } catch (error) {
+        message.error('文件上传失败')
+        onError?.(error as Error)
+      }
     },
     onDrop(e) {
       console.log('Dropped files', e.dataTransfer.files)
@@ -80,22 +75,13 @@ function FileUpload() {
     },
   }
 
-  // 点击 "选择" 按钮时筛选数据
   const handleSelectData = () => {
-    // 使用 selectedRowKeys 从 iniData 中筛选出匹配的数据
-    const filteredData = iniData.data.filter((item: any) =>
+    const filteredData = iniData.dataSelf.filter((item: any) =>
       selectedRowKeys.includes(item.label)
     )
-
-    // 更新 selectedData
-    dispatch(setSelectedData(filteredData))
+    dispatch(updateKV({ selectedData: filteredData }))
     message.success('数据已选择')
   }
-  console.log(
-    'columnsForOverviewcolumnsForOverviewcolumnsForOverview',
-    columnsForOverview,
-    iniData.columns
-  )
 
   return (
     <div>
@@ -107,7 +93,7 @@ function FileUpload() {
         </Radio.Group>
 
         {/* 上传区域 */}
-        <Dragger {...props}>
+        <Dragger {...uploadProps}>
           <p className="ant-upload-drag-icon">
             <InboxOutlined />
           </p>
@@ -124,8 +110,8 @@ function FileUpload() {
           />
         ) : (
           <Table
-            columns={columnsForDetail} // 根据需要调整列
-            dataSource={iniData.data} // 数据概览
+            columns={columnsForDetail}
+            dataSource={iniData.dataSelf}
             rowKey="title"
           />
         )}

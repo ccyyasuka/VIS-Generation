@@ -9,6 +9,7 @@ function Chat() {
   const [inputValue, setInputValue] = useState('')
   const dispatch = useDispatch<AppDispatch>()
   const { loading, chatContent } = useSelector((state: any) => state.data)
+  console.log('chatContentchatContent', chatContent)
 
   const handleSend = () => {
     if (inputValue.trim() === '') return
@@ -20,22 +21,29 @@ function Chat() {
     <div className={style.main}>
       <div className={style.head}>对话框</div>
       <div className={style.talkFrame}>
-        {chatContent.map((content: { role: string; content: string }, index: number) =>
-          content.role === 'system' ? (
-            <div key={index} className={style.talk} style={{ marginLeft: 'auto' }}>
-              <Card style={{ width: 200 }}>
-                <p>{content.content}</p>
-              </Card>
-              <Avatar src="https://api.dicebear.com/9.x/adventurer/svg?seed=Kiki" />
-            </div>
-          ) : (
-            <div key={index} className={style.talk} style={{ marginRight: 'auto' }}>
-              <Avatar src="https://robohash.org/yixingzhang" />
-              <Card style={{ width: 200 }}>
-                <p>{content.content}</p>
-              </Card>
-            </div>
-          )
+        {chatContent.map(
+          (curContent: { role: string; content: string }, index: number) =>
+            curContent.role === 'system' ? (
+              <div
+                key={index}
+                className={style.talk}
+                style={{ marginLeft: 'auto' }}>
+                <Card style={{ width: 200 }}>
+                  <p>{curContent.content}</p>
+                </Card>
+                <Avatar src="https://api.dicebear.com/9.x/adventurer/svg?seed=Kiki" />
+              </div>
+            ) : (
+              <div
+                key={index}
+                className={style.talk}
+                style={{ marginRight: 'auto' }}>
+                <Avatar src="https://robohash.org/yixingzhang" />
+                <Card style={{ width: 200 }}>
+                  <p>{curContent.content}</p>
+                </Card>
+              </div>
+            )
         )}
       </div>
       <div className={style.ques}>

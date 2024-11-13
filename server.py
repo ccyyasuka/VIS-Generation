@@ -9,7 +9,8 @@ app = Flask(__name__)
 # 启用CORS，允许所有源访问（或你可以指定特定的源）
 CORS(app)
 UPLOAD_FOLDER = r'.\uploads'
-MOCK = True
+MOCK = False
+API_KEY = "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"
 responses = [
     "你好，我是智能助手。",
     "你今天过得怎么样？",
@@ -33,7 +34,6 @@ def chat():
     print(user_input)
     print("***************************************")
 
-    # 随机选择一个回复
     if (MOCK):
         return jsonify({
             "role": "system",
@@ -75,7 +75,8 @@ def chat():
     clean_responce = ""
     if gpt_resp.choices and gpt_resp.choices[0]:
         clean_responce: str = gpt_resp.choices[0].message.content.strip()
-
+    print("clean_responceclean_responceclean_responce")
+    print(clean_responce)
     return jsonify({
         "role": "system",
         "content": clean_responce
