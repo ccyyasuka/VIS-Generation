@@ -10,7 +10,7 @@ app = Flask(__name__)
 CORS(app)
 UPLOAD_FOLDER = r'.\uploads'
 MOCK = False
-API_KEY = "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"
+
 responses = [
     "你好，我是智能助手。",
     "你今天过得怎么样？",

@@ -14,11 +14,11 @@ function App() {
         <div className={style.file}>
           <Upload />
         </div>
-        <div className={style.chat}>
-          <Chat />
-        </div>
         <div className={style.mainView}>
           <MainView />
+        </div>
+        <div className={style.chat}>
+          <Chat />
         </div>
       </Provider>
     </div>

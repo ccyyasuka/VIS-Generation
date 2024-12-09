@@ -8,6 +8,7 @@ import pandas as pd
 import os
 import json
 import re
+import time
 from generateMock import generate_mock
 app = Flask(__name__)
 #
@@ -15,6 +16,7 @@ app = Flask(__name__)
 CORS(app)
 UPLOAD_FOLDER = r'.\uploads'
 MOCK = True
+
 responses = [
     "你好，我是智能助手。",
     "你今天过得怎么样？",
@@ -34,7 +36,7 @@ ROUND = 1
 
 @app.route('/chat', methods=['POST'])
 def chat():
-    global ROUND 
+    global ROUND
     user_input = request.json.get("message", "")
     print("***************************************")
     print(user_input)
@@ -48,7 +50,7 @@ def chat():
         recommendation = mock_res['recommendation']
         return jsonify({
             "role": "assistant",
-            "content": "summary",
+            "content": summary,
             "draw_graph": result
         })
 
@@ -72,7 +74,7 @@ def chat():
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
-    global ROUND 
+    global ROUND
     if 'file' not in request.files:
         return jsonify({'error': '没有文件'}), 400
 
@@ -91,6 +93,7 @@ def upload_file():
     file.save(file_path)
 
     if MOCK:
+
         df = pd.read_excel(file_path)
         columns = [{'title': col, 'dataType': str(
             df[col].dtype)} for col in df.columns]

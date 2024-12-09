@@ -136,6 +136,7 @@ export const sendChatMessage = (inputValue: string) => {
       })
 
       const data = await response.json()
+      console.log('datadatadatadatadata000000', data)
 
       dispatch(
         updateKV({
