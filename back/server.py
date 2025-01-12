@@ -10,12 +10,14 @@ import json
 import re
 import time
 from generateMock import generate_mock
+from mygraph import stream_graph_updates
+
 app = Flask(__name__)
 #
 # 启用CORS，允许所有源访问（或你可以指定特定的源）
 CORS(app)
 UPLOAD_FOLDER = r'.\uploads'
-MOCK = True
+MOCK = False
 
 responses = [
     "你好，我是智能助手。",
@@ -27,6 +29,7 @@ responses = [
     "你的问题很有挑战性！",
     "我认为我们可以继续讨论这个话题。",
 ]
+API_KEY = os.getenv("OPENAI_API_KEY")
 client = OpenAI(
     # This is the default and can be omitted
     api_key=API_KEY
@@ -38,38 +41,49 @@ ROUND = 1
 def chat():
     global ROUND
     user_input = request.json.get("message", "")
-    print("***************************************")
-    print(user_input)
-    print("***************************************")
+    file_path = request.json.get("filePath", "")
+    
+    
+    res = stream_graph_updates(user_input, file_path)
+    content_dict = json.loads(res.content)
+    
+    return jsonify({'status': '成功',
+            'summary': content_dict.reply,
+            'analyze_result': content_dict.graphs_grammar,
+            'recommendation': content_dict.recommendation})
+    
+    # print("***************************************")
+    # print(user_input)
+    # print("***************************************")
 
-    if (MOCK):
-        mock_res = generate_mock(ROUND)
-        ROUND += 1
-        summary = mock_res['summary']
-        result = mock_res['result']
-        recommendation = mock_res['recommendation']
-        return jsonify({
-            "role": "assistant",
-            "content": summary,
-            "draw_graph": result
-        })
+    # if (MOCK):
+    #     mock_res = generate_mock(ROUND)
+    #     ROUND += 1
+    #     summary = mock_res['summary']
+    #     result = mock_res['result']
+    #     recommendation = mock_res['recommendation']
+    #     return jsonify({
+    #         "role": "assistant",
+    #         "content": summary,
+    #         "draw_graph": result
+    #     })
 
-    gpt_resp = client.chat.completions.create(
-        model='gpt-4o-mini',
-        messages=user_input,
-        timeout=30,
-        n=1
-    )
-    print(gpt_resp)
-    clean_responce = ""
-    if gpt_resp.choices and gpt_resp.choices[0]:
-        clean_responce: str = gpt_resp.choices[0].message.content.strip()
-    print("clean_responceclean_responceclean_responce")
-    print(clean_responce)
-    return jsonify({
-        "role": "system",
-        "content": clean_responce
-    })
+    # gpt_resp = client.chat.completions.create(
+    #     model='gpt-4o-mini',
+    #     messages=user_input,
+    #     timeout=30,
+    #     n=1
+    # )
+    # print(gpt_resp)
+    # clean_responce = ""
+    # if gpt_resp.choices and gpt_resp.choices[0]:
+    #     clean_responce: str = gpt_resp.choices[0].message.content.strip()
+    # print("clean_responceclean_responceclean_responce")
+    # print(clean_responce)
+    # return jsonify({
+    #     "role": "system",
+    #     "content": clean_responce
+    # })
 
 
 @app.route('/upload', methods=['POST'])
@@ -81,77 +95,48 @@ def upload_file():
     file = request.files['file']
     if file.filename == '':
         return jsonify({'error': '没有选择文件'}), 400
-
-    chat_content = request.form.get('chatContent')
-    if chat_content:
-        try:
-            chat_content = json.loads(chat_content)  # 将 JSON 字符串转换为字典
-        except json.JSONDecodeError:
-            return jsonify({'error': 'chatContent 格式错误'}), 400
-
-    file_path = os.path.join(UPLOAD_FOLDER, file.filename)
+    file_path = request.form.get('filePath')
+    file_path = os.path.join(UPLOAD_FOLDER, file_path)
     file.save(file_path)
+    user_input = "我上传了文件，请你首先先自行描述一下数据，挖掘一些潜在的insight"
+    
+    res = stream_graph_updates(user_input, file_path)
+    print("resresresresresresresresresresresresresresres")
+    print(res)
+    try:
+        # 尝试将 res.content 解析为 JSON
+        content_dict = json.loads(res)
+        
+        # 如果解析成功，确保所需键存在
+        reply = content_dict.get('reply', 'No reply provided')
+        graphs_grammar = content_dict.get('graphs_grammar', [])
+        recommendation = content_dict.get('recommendation', [])
 
-    if MOCK:
-
-        df = pd.read_excel(file_path)
-        columns = [{'title': col, 'dataType': str(
-            df[col].dtype)} for col in df.columns]
-        mock_res = generate_mock(ROUND)
-        ROUND += 1
-        summary = mock_res['summary']
-        result = mock_res['result']
-        recommendation = mock_res['recommendation']
+    except json.JSONDecodeError:
+        # 如果解析失败，则假设 res.content 是纯文本
+        content_dict = {
+            'reply': res.content,
+            'graphs_grammar': [],
+            'recommendation': []
+        }
+        reply = res.content
+        graphs_grammar = []
+        recommendation = []
         return jsonify({'status': '成功',
-                        'columns': columns,
-                        'data': df.head().to_dict(orient='records'),
-                        'summary': summary,
-                        'analyze_result': result,
-                        'recommendation': recommendation})
+            'summary': res.content,
+            'analyze_result': [],
+            'recommendation': []})
 
-    # try:
-    # 使用pandas读取excel文件
-    df = pd.read_excel(file_path)
-    analyze_result = analyze_dataframe(df, client)
-    print("analyze_result,analyze_result,analyze_result")
-
-    json_str_match = re.search(
-        r'```json\n(.*?)\n```', analyze_result, re.DOTALL)
-    if json_str_match:
-        json_str = json_str_match.group(1)  # 提取 JSON 字符串
-        analyze_data = json.loads(json_str)  # 将 JSON 字符串解析为字典
-
-        # 输出结果以确认解析是否成功
-        print("Summary:", analyze_data.get("summary"))
-        print("Result:", analyze_data.get("result"))
-        print("Recommendation:", analyze_data.get("recommendation"))
-    else:
-        print("No JSON content found in analyze_result['content'].")
-    print(analyze_result)
-    print("**************************************")
-    print(json_str_match)
-    print(000000000000000000000000000)
-    analyze_data = json.loads(json_str_match)
-    print(111111111111)
-    print(analyze_data)
-    # 提取字段
-    summary = analyze_data.get("summary", "")
-    result = analyze_data.get("result", [])
-    recommendation = analyze_data.get("recommendation", [])
-    print(222222222222222)
-
-    # 获取列名和列的数据类型
-    columns = [{'title': col, 'dataType': str(
-        df[col].dtype)} for col in df.columns]
-    print(3333333333333333333)
-
-    # 返回列名和列的数据类型
+    content_dict = json.loads(res)
+    
     return jsonify({'status': '成功',
-                    'columns': columns,
-                    'data': df.head().to_dict(orient='records'),
-                    'summary': summary,
-                    'analyze_result': result,
-                    'recommendation': recommendation})
+            'summary': content_dict["reply"],
+            'analyze_result': content_dict["graphs_grammar"],
+            'recommendation': content_dict["recommendation"]})
+
+    
+
+    
     # except Exception as e:
     #     return jsonify({'error': str(e)}), 500
 

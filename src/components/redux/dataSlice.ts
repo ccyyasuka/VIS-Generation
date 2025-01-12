@@ -1,7 +1,7 @@
 import { Dispatch } from 'redux'
 import { ThunkAction } from 'redux-thunk'
 import { RootState } from './store'
-
+import { uuid } from '../tools'
 // 定义 State 类型
 export interface DataState {
   iniData: any
@@ -11,7 +11,7 @@ export interface DataState {
   loading: boolean
   error: string | null
   chatContent: { role: string; content: string }[]
-  selectedData: any
+  // selectedData: any
   config: any
 }
 
@@ -27,11 +27,11 @@ const initialState: DataState = {
     { role: 'system', content: '你好，请问你是谁' },
     { role: 'assistant', content: '我是你的智能可视化分析助手' },
   ],
-  selectedData: [
-    { label: '2022', value: 20 },
-    { label: '2023', value: 10 },
-    { label: '2024', value: 60 },
-  ],
+  // selectedData: [
+  //   { label: '2022', value: 20 },
+  //   { label: '2023', value: 10 },
+  //   { label: '2024', value: 60 },
+  // ],
   config: undefined,
 }
 
@@ -66,9 +66,13 @@ export const uploadFileAndSetData = (
           chatContent: [...chatContent, newChat],
         })
       )
+      const [pureName,kuozhan] = file.name.split(".")
+
+      const filePath=pureName+"-"+ uuid()+"."+kuozhan
       const formData = new FormData()
       formData.append('file', file)
-      formData.append('chatContent', JSON.stringify(chatContent))
+      formData.append('filePath', filePath)
+
       const response = await fetch('http://localhost:5000/upload', {
         method: 'POST',
         body: formData,

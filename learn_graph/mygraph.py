@@ -220,7 +220,6 @@ planner = planner_prompt | ChatOpenAI(
 
 
 def plan_step(state: State):
-    print("planplanplanplanplanplanplanplanplanplanplanplanplanplanplan")
     content = state['messages'][-1].content
     plan = planner.invoke({"messages": [("user", content)]})
     print(plan)
@@ -342,6 +341,7 @@ def route_primary_assistant(
     if tool_calls:
         if tool_calls[0]["name"] == ToReplan.__name__:
             return "enter_replan"
+        return tool_calls[0]["name"]
     raise ValueError("Invalid route")
 
 
