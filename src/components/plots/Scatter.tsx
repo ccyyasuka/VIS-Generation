@@ -126,6 +126,8 @@ interface ScatterProps {
   height: string
   left: string
   top: string
+  offsetLeft:string
+  offsetTop:string
   x: string
   y: string
   label?: string

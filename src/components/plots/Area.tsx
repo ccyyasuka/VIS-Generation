@@ -131,6 +131,8 @@ interface AreaProps {
   height: string
   left: string
   top: string
+  offsetLeft:string
+  offsetTop:string
   position: 'absolute' | 'fixed'
   interactionType?: string
   allowedinteractionType?: string

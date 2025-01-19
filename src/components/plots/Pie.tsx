@@ -117,6 +117,8 @@ interface PieProps {
   height: string
   left: string
   top: string
+  offsetLeft:string
+  offsetTop:string
   x: string
   y: string
   interactionType: string

@@ -12,6 +12,8 @@ interface ArcDiagramProps {
   height: string
   left: string
   top: string
+  offsetLeft:string
+  offsetTop:string
 }
 
 const ArcDiagram: React.FC<ArcDiagramProps> = ({
