@@ -6,6 +6,7 @@ import { ChangeMessageSetting } from './redux/action/action'
 import _ from 'lodash'
 import { AppState } from './redux/store'
 import { ReduxProviderWrapper } from './redux/store'
+import WrapperWithButton, {figWrapperProps} from '../wrapperButton'
 type PieDataItem = {
   label: string
   value: number
@@ -113,8 +114,6 @@ interface PieProps {
   height: string
   left: string
   top: string
-  offsetLeft:string
-  offsetTop:string
   x: string
   y: string
   interactionType: string
@@ -228,4 +227,52 @@ const DonatWithRedux: React.FC<PieProps> = (props) => (
   </ReduxProviderWrapper>
 )
 
-export default DonatWithRedux
+const NightingaleWithWrapper: React.FC<figWrapperProps & PieProps> = ({
+  data,
+  width,
+  height,
+  left,
+  top,
+  offsetLeft,
+  offsetTop,
+  id,
+  x,
+  y,
+  interactionType,
+  interactionKey,
+  allowedinteractionType,
+  // allowedinteractionKey
+}) => {
+  // Calculate new width and height
+  const newWidth = `100%`
+  const newHeight = `95%`
+  const newLeft = '10px'
+  const newTop = '10px'
+
+  return (
+    <WrapperWithButton
+      width={width}
+      height={height}
+      id={id}
+      left={left} // Fixed left position
+      top={top} // Fixed top position
+      offsetLeft={offsetLeft}
+      offsetTop={offsetTop}>
+      <DonatWithRedux
+        data={data}
+        width={newWidth}
+        height={newHeight}
+        left={newLeft}
+        top={newTop}
+        x={x}
+        y={y}
+        interactionType={interactionType}
+        interactionKey={interactionKey}
+        allowedinteractionType={allowedinteractionType}
+        // allowedinteractionKey={allowedinteractionKey}
+      />
+    </WrapperWithButton>
+  )
+}
+
+export default NightingaleWithWrapper

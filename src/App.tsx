@@ -4,6 +4,7 @@ import style from './App.module.css'
 import MainView from './components/MainView'
 import Chat from './components/Chat'
 import Upload from './components/Upload'
+import { TableView } from './components/Table'
 import { Provider } from 'react-redux'
 // import { store } from './components/plots/redux/store'
 import store from './components/redux/store'
@@ -29,9 +30,15 @@ function App() {
         <div className={style.file}>
           <Upload />
         </div>
-        <div className={style.mainView} ref={mainViewRef}>
-          <MainView offset={offset} />
+        <div className={style.middle}>
+          <div className={style.mainView} ref={mainViewRef}>
+            <MainView offset={offset} />
+          </div>
+          <div className={style.table} ref={mainViewRef}>
+            <TableView></TableView>
+          </div>
         </div>
+        
         <div className={style.chat}>
           <Chat />
         </div>

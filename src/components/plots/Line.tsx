@@ -5,6 +5,8 @@ import { useDispatch, useSelector } from 'react-redux'
 import { ChangeMessageSetting } from './redux/action/action'
 import _ from 'lodash'
 import { AppState, ReduxProviderWrapper } from './redux/store'
+import WrapperWithButton, {figWrapperProps} from '../wrapperButton'
+
 type LineDataItem = {
   label: string // Typically, this would be a category or time point
   value: number // Value for that point
@@ -146,6 +148,7 @@ interface LineProps {
   interactionType: string
   interactionKey: string
   allowedinteractionType: string
+  // allowedinteractionKey: string
 }
 
 const Line: React.FC<LineProps> = ({
@@ -159,6 +162,7 @@ const Line: React.FC<LineProps> = ({
   interactionType,
   interactionKey,
   allowedinteractionType,
+  // allowedinteractionKey
 }) => {
   const chartRef = useRef<HTMLDivElement>(null)
   const curMessage: messageType = useSelector(
@@ -249,131 +253,131 @@ const Line: React.FC<LineProps> = ({
   )
 }
 
-interface WrapperWithButtonProps {
-  children: ReactNode
-  offsetLeft: string
-  offsetTop: string
-  width: string
-  height: string
-  left: string
-  top: string
-}
-const WrapperWithButton: React.FC<WrapperWithButtonProps> = ({
-  children,
-  width,
-  height,
-  left,
-  top,
-  offsetLeft,
-  offsetTop,
-}) => {
-  const [isVisible, setIsVisible] = useState(true)
-  const [position, setPosition] = useState({ left, top })
-  const [isDragging, setIsDragging] = useState(false)
-  const dragStartPos = useRef({ x: 0, y: 0 })
-  const containerRef = useRef<HTMLDivElement | null>(null)
+// interface WrapperWithButtonProps {
+//   children: ReactNode
+//   offsetLeft: string
+//   offsetTop: string
+//   width: string
+//   height: string
+//   left: string
+//   top: string
+// }
+// const WrapperWithButton: React.FC<WrapperWithButtonProps> = ({
+//   children,
+//   width,
+//   height,
+//   left,
+//   top,
+//   offsetLeft,
+//   offsetTop,
+// }) => {
+//   const [isVisible, setIsVisible] = useState(true)
+//   const [position, setPosition] = useState({ left, top })
+//   const [isDragging, setIsDragging] = useState(false)
+//   const dragStartPos = useRef({ x: 0, y: 0 })
+//   const containerRef = useRef<HTMLDivElement | null>(null)
 
-  // 计算基于百分比的实际像素值
-  const getPositionInPixels = () => {
-    // debugger
-    const offsetLeftFloat = parseInt(offsetLeft, 10) // 将 '15px' 转换为 15
-    const offsetTopFloat = parseInt(offsetTop, 10)
-    return { offsetLeftFloat, offsetTopFloat }
-  }
+//   // 计算基于百分比的实际像素值
+//   const getPositionInPixels = () => {
+//     // debugger
+//     const offsetLeftFloat = parseInt(offsetLeft, 10) // 将 '15px' 转换为 15
+//     const offsetTopFloat = parseInt(offsetTop, 10)
+//     return { offsetLeftFloat, offsetTopFloat }
+//   }
 
-  const { offsetLeftFloat, offsetTopFloat } = getPositionInPixels()
+//   const { offsetLeftFloat, offsetTopFloat } = getPositionInPixels()
 
-  // 开始拖拽
-  const handleMouseDown = () => {
-    // debugger
-    setIsDragging(true)
-  }
+//   // 开始拖拽
+//   const handleMouseDown = () => {
+//     // debugger
+//     setIsDragging(true)
+//   }
 
-  // 拖拽中
-  const handleMouseMove = (e: MouseEvent) => {
-    // debugger
-    console.log('isDragging', isDragging)
-    if (isDragging) {
-      // debugger
-      const newLeft = e.clientX - offsetLeftFloat - 10
-      const newTop = e.clientY - offsetTopFloat - 10
-      // 更新位置
-      setPosition({
-        left: `${newLeft}px`,
-        top: `${newTop}px`,
-      })
-    }
-  }
+//   // 拖拽中
+//   const handleMouseMove = (e: MouseEvent) => {
+//     // debugger
+//     console.log('isDragging', isDragging)
+//     if (isDragging) {
+//       // debugger
+//       const newLeft = e.clientX - offsetLeftFloat - 10
+//       const newTop = e.clientY - offsetTopFloat - 10
+//       // 更新位置
+//       setPosition({
+//         left: `${newLeft}px`,
+//         top: `${newTop}px`,
+//       })
+//     }
+//   }
 
-  // 拖拽结束
-  const handleMouseUp = () => {
-    // debugger
-    setIsDragging(false)
-  }
+//   // 拖拽结束
+//   const handleMouseUp = () => {
+//     // debugger
+//     setIsDragging(false)
+//   }
 
-  useEffect(() => {
-    const container = containerRef.current
-    if (container) {
-      container.addEventListener('mousemove', handleMouseMove)
-      container.addEventListener('mouseup', handleMouseUp)
-      return () => {
-        container.removeEventListener('mousemove', handleMouseMove)
-        container.removeEventListener('mouseup', handleMouseUp)
-      }
-    }
-  }, [isDragging])
+//   useEffect(() => {
+//     const container = containerRef.current
+//     if (container) {
+//       container.addEventListener('mousemove', handleMouseMove)
+//       container.addEventListener('mouseup', handleMouseUp)
+//       return () => {
+//         container.removeEventListener('mousemove', handleMouseMove)
+//         container.removeEventListener('mouseup', handleMouseUp)
+//       }
+//     }
+//   }, [isDragging])
 
-  if (!isVisible) return null
+//   if (!isVisible) return null
 
-  return (
-    <div
-      ref={containerRef}
-      style={{
-        position: 'absolute',
-        left: position.left,
-        top: position.top,
-        width,
-        height,
-        border: '1px solid gray',
-        padding: '10px',
-        borderRadius: '5px',
-        display: 'inline-block',
-      }}>
-      <div
-        onMouseDown={handleMouseDown}
-        // onMouseUp={handleMouseUp}
-        style={{
-          position: 'absolute',
-          left: '0',
-          top: '0',
-          width: '20px',
-          height: '20px',
-          backgroundColor: 'gray',
-          cursor: 'move',
-        }}
-      />
-      {children}
-      <button
-        onClick={() => setIsVisible(false)}
-        style={{
-          position: 'absolute',
-          bottom: '5px',
-          right: '10px',
-          backgroundColor: '#f0f0f0',
-          border: '1px solid #ccc',
-          borderRadius: '3px',
-          cursor: 'pointer',
-        }}>
-        Close
-      </button>
-    </div>
-  )
-}
+//   return (
+//     <div
+//       ref={containerRef}
+//       style={{
+//         position: 'absolute',
+//         left: position.left,
+//         top: position.top,
+//         width,
+//         height,
+//         border: '1px solid gray',
+//         padding: '10px',
+//         borderRadius: '5px',
+//         display: 'inline-block',
+//       }}>
+//       <div
+//         onMouseDown={handleMouseDown}
+//         // onMouseUp={handleMouseUp}
+//         style={{
+//           position: 'absolute',
+//           left: '0',
+//           top: '0',
+//           width: '20px',
+//           height: '20px',
+//           backgroundColor: 'gray',
+//           cursor: 'move',
+//         }}
+//       />
+//       {children}
+//       <button
+//         onClick={() => setIsVisible(false)}
+//         style={{
+//           position: 'absolute',
+//           bottom: '5px',
+//           right: '10px',
+//           backgroundColor: '#f0f0f0',
+//           border: '1px solid #ccc',
+//           borderRadius: '3px',
+//           cursor: 'pointer',
+//         }}>
+//         Close
+//       </button>
+//     </div>
+//   )
+// }
 
-interface BarWrapperProps {
-  offsetLeft: string
-  offsetTop: string
-}
+// interface BarWrapperProps {
+//   offsetLeft: string
+//   offsetTop: string
+// }
 
 
 
@@ -383,7 +387,7 @@ const LineWithRedux: React.FC<LineProps> = (props) => (
   </ReduxProviderWrapper>
 )
 
-const BarWithWrapper: React.FC<BarWrapperProps & LineProps> = ({
+const BarWithWrapper: React.FC<figWrapperProps & LineProps> = ({
   data,
   width,
   height,
@@ -393,9 +397,11 @@ const BarWithWrapper: React.FC<BarWrapperProps & LineProps> = ({
   offsetTop,
   x,
   y,
+  id,
   interactionType,
   interactionKey,
   allowedinteractionType,
+  // allowedinteractionKey
 }) => {
   // Calculate new width and height
   const newWidth = `100%`
@@ -407,6 +413,7 @@ const BarWithWrapper: React.FC<BarWrapperProps & LineProps> = ({
     <WrapperWithButton
       width={width}
       height={height}
+      id={id}
       left={left} // Fixed left position
       top={top} // Fixed top position
       offsetLeft={offsetLeft}
@@ -422,6 +429,7 @@ const BarWithWrapper: React.FC<BarWrapperProps & LineProps> = ({
         interactionType={interactionType}
         interactionKey={interactionKey}
         allowedinteractionType={allowedinteractionType}
+        // allowedinteractionKey={allowedinteractionKey}
       />
     </WrapperWithButton>
   )
@@ -429,4 +437,4 @@ const BarWithWrapper: React.FC<BarWrapperProps & LineProps> = ({
 
 
 
-export default LineWithRedux
+export default BarWithWrapper

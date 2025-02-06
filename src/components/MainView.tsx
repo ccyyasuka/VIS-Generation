@@ -9,6 +9,9 @@ import ForceDirect from './plots/ForceDirect'
 import ArcDiagram from './plots/ArcDiagram'
 import Area from './plots/Area'
 import { useDispatch, useSelector } from 'react-redux'
+import { DownloadOutlined } from '@ant-design/icons'
+import { style } from 'd3'
+import { saveAs } from 'file-saver'
 // type DataItem = {
 //   label: string
 //   value: number
@@ -18,6 +21,7 @@ interface MainViewProps {
 }
 type ConfigItem = {
   name: string
+  id: string
   meta: {
     width: string
     height: string
@@ -30,24 +34,30 @@ type ConfigItem = {
   [key: string]: any
 }
 const MainView: React.FC<MainViewProps> = ({ offset }) => {
+  const handleDownload = () => {
+    const content = JSON.stringify({ data, curConfig }, null, 2)
+    const blob = new Blob([content], { type: 'application/json' })
+    saveAs(blob, 'data_and_config.json')
+  }
   const { left, top } = offset
   // 偏移值
 
-  // const { selectedData, config } = useSelector((state: any) => state.data)
+  const { selectedData, config } = useSelector((state: any) => state.data)
   // // console.log('selectedData, config', selectedData, config)
-  // const data: any[] = selectedData
+  const data: any[] = selectedData
 
-  // const curConfig: ConfigItem[] = config
-  // console.log('datadatadatadata', data, curConfig)
+  const curConfig: ConfigItem[] = config
+
+  console.log('datadatadatadata11111', data, curConfig)
   // 统计数据测试样例
-  const data: any = [
-    { year: '2019', height: 11, weight: 22, value: 54 },
-    { year: '2020', height: 10, weight: 160, value: 90 },
-    { year: '2021', height: 190, weight: 29, value: 62 },
-    { year: '2022', height: 80, weight: 120, value: 20 },
-    { year: '2023', height: 180, weight: 160, value: 10 },
-    { year: '2024', height: 280, weight: 220, value: 60 },
-  ]
+  // const data: any = [
+  //   { year: '2019', height: 11, weight: 22, value: 54 },
+  //   { year: '2020', height: 10, weight: 160, value: 90 },
+  //   { year: '2021', height: 190, weight: 29, value: 62 },
+  //   { year: '2022', height: 80, weight: 120, value: 20 },
+  //   { year: '2023', height: 180, weight: 160, value: 10 },
+  //   { year: '2024', height: 280, weight: 220, value: 60 },
+  // ]
 
   // 地图数据测试样例
   // const data: any = {
@@ -99,102 +109,104 @@ const MainView: React.FC<MainViewProps> = ({ offset }) => {
 
   // // 历史行为习惯
   // // assistant api 大模型选择参数
-  const curConfig: ConfigItem[] = [
-    // {
-    //   name: 'ArcDiagram',
-    //   meta: {
-    //     width: '60%',
-    //     height: '60%',
-    //     left: '15%',
-    //     top: '5%',
-    //   },
-    //   interactionType: 'filter',
-    //   interactionKey: 'height',
-    //   allowedinteractionType: 'filter',
-    // },
-    // {
-    //   name: 'BarRight',
-    //   meta: {
-    //     width: '40%',
-    //     height: '20%',
-    //     left: '15%',
-    //     top: '5%',
-    //   },
-    //   x: 'year',
-    //   y: 'height',
-    //   interactionType: 'filter',
-    //   interactionKey: 'height',
-    //   allowedinteractionType: 'filter',
-    // },
-    {
-      name: 'BarVertical',
-      meta: {
-        width: '20%',
-        height: '60%',
-        left: '15%',
-        top: '5%',
-      },
-      x: 'year',
-      y: 'height',
-      interactionType: 'filter',
-      interactionKey: 'height',
-      allowedinteractionType: 'filter',
-    },
-    // {
-    //   name: 'Donat',
-    //   meta: {
-    //     width: '30%',
-    //     height: '30%',
-    //     left: '25%',
-    //     top: '55%',
-    //   },
-    //   x: 'year',
-    //   y: 'height',
-    //   interactionType: 'filter',
-    //   interactionKey: 'height',
-    //   allowedinteractionType: 'filter',
-    // },
-    {
-      name: 'Line',
-      meta: {
-        width: '30%',
-        height: '30%',
-        left: '65%',
-        top: '15%',
-      },
-      x: 'year',
-      y: 'height',
-      interactionType: 'filter',
-      interactionKey: 'height',
-      allowedinteractionType: 'filter',
-    },
-    // {
-    //   name: 'Scatter',
-    //   meta: {
-    //     width: '30%',
-    //     height: '30%',
-    //     left: '15%',
-    //     top: '85%',
-    //   },
-    //   x: 'height',
-    //   y: 'weight',
-    //   z: 'value',
-    //   interactionType: 'filter',
-    //   interactionKey: 'height',
-    //   allowedinteractionType: 'filter',
-    // },
-    // {
-    //   name: 'Area',
-    //   meta: {
-    //     width: '30%',
-    //     height: '30%',
-    //     left: '25%',
-    //     top: '35%',
-    //   },
-    //   interactionType: 'filter',
-    //   allowedinteractionType: 'ByValue',
-    // },
-  ]
+  // const curConfig: ConfigItem[] = [
+  //   // {
+  //   //   name: 'ArcDiagram',
+  //   //   meta: {
+  //   //     width: '60%',
+  //   //     height: '60%',
+  //   //     left: '15%',
+  //   //     top: '5%',
+  //   //   },
+  //   //   interactionType: 'filter',
+  //   //   interactionKey: 'height',
+  //   //   allowedinteractionType: 'filter',
+  //   // },
+  //   // {
+  //   //   name: 'BarRight',
+  //   //   meta: {
+  //   //     width: '40%',
+  //   //     height: '20%',
+  //   //     left: '15%',
+  //   //     top: '5%',
+  //   //   },
+  //   //   x: 'year',
+  //   //   y: 'height',
+  //   //   interactionType: 'filter',
+  //   //   interactionKey: 'height',
+  //   //   allowedinteractionType: 'filter',
+  //   // },
+  //   {
+  //     name: 'BarVertical',
+  //     meta: {
+  //       width: '20%',
+  //       height: '60%',
+  //       left: '15%',
+  //       top: '5%',
+  //     },
+  //     x: 'year',
+  //     y: 'height',
+  //     interactionType: 'filter',
+  //     interactionKey: 'height',
+  //     allowedinteractionType: 'filter',
+  //     allowedinteractionKey: 'year',
+  //   },
+  //   {
+  //     name: 'Donat',
+  //     meta: {
+  //       width: '30%',
+  //       height: '30%',
+  //       left: '25%',
+  //       top: '55%',
+  //     },
+  //     x: 'year',
+  //     y: 'height',
+  //     interactionType: 'filter',
+  //     interactionKey: 'height',
+  //     allowedinteractionType: 'filter',
+  //   },
+  //   {
+  //     name: 'Line',
+  //     meta: {
+  //       width: '30%',
+  //       height: '30%',
+  //       left: '65%',
+  //       top: '15%',
+  //     },
+  //     x: 'year',
+  //     y: 'height',
+  //     interactionType: 'filter',
+  //     interactionKey: 'year',
+  //     allowedinteractionType: 'filter',
+  //     allowedinteractionKey: 'height',
+  //   },
+  //   // {
+  //   //   name: 'Scatter',
+  //   //   meta: {
+  //   //     width: '30%',
+  //   //     height: '30%',
+  //   //     left: '15%',
+  //   //     top: '85%',
+  //   //   },
+  //   //   x: 'height',
+  //   //   y: 'weight',
+  //   //   z: 'value',
+  //   //   interactionType: 'filter',
+  //   //   interactionKey: 'height',
+  //   //   allowedinteractionType: 'filter',
+  //   // },
+  //   // {
+  //   //   name: 'Area',
+  //   //   meta: {
+  //   //     width: '30%',
+  //   //     height: '30%',
+  //   //     left: '25%',
+  //   //     top: '35%',
+  //   //   },
+  //   //   interactionType: 'filter',
+  //   //   allowedinteractionType: 'ByValue',
+  //   // },
+  // ]
 
   if (data && curConfig) {
     const renderComponents = curConfig.map(
@@ -230,6 +242,7 @@ const MainView: React.FC<MainViewProps> = ({ offset }) => {
 
         return Component ? (
           <Component
+            id={item.id}
             key={index}
             data={data as any}
             width={item.meta.width}
@@ -243,13 +256,29 @@ const MainView: React.FC<MainViewProps> = ({ offset }) => {
             interactionType={item.interactionType}
             interactionKey={item.interactionKey}
             allowedinteractionType={item.allowedinteractionType}
+            // allowedinteractionKey={item.allowedinteractionKey}
             {...(item.name === 'Scatter' ? { label: item.label || '' } : {})}
           />
         ) : null
       }
     )
 
-    return <div>{renderComponents}</div>
+    return (
+      <div>
+        {renderComponents}
+        <div
+          className="download"
+          style={{
+            position: 'absolute',
+            left: '95%',
+            top: '95%',
+            cursor: 'pointer',
+          }}
+          onClick={handleDownload}>
+          <DownloadOutlined />
+        </div>
+      </div>
+    )
   }
 
   return <div></div>

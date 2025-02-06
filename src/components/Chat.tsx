@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import style from './chat.module.css'
 import { Input, Button, Card, Avatar } from 'antd'
 import { useDispatch, useSelector } from 'react-redux'
@@ -10,26 +10,48 @@ function Chat() {
   const dispatch = useDispatch<AppDispatch>()
   const { loading, chatContent } = useSelector((state: any) => state.data)
   console.log('chatContentchatContent', chatContent)
-
+  const talkFrameRef = useRef<HTMLDivElement>(null)
+  const scrollToBottom = () => {
+    console.log('talkFrameRef.current', talkFrameRef.current)
+    if (talkFrameRef.current) {
+      console.log(
+        'talkFrameRef.current',
+        talkFrameRef.current.scrollTop,
+        talkFrameRef.current.scrollHeight
+      )
+      talkFrameRef.current.scrollTop = talkFrameRef.current.scrollHeight
+    }
+  }
   const handleSend = () => {
     if (inputValue.trim() === '') return
     dispatch(sendChatMessage(inputValue))
     setInputValue('') // Clear the input field after sending
+    scrollToBottom()
   }
+  useEffect(() => {
+    scrollToBottom()
+  }, [chatContent])
 
   return (
     <div className={style.main}>
       <div className={style.head}>对话框</div>
-      <div className={style.talkFrame}>
+      <div className={style.talkFrame} ref={talkFrameRef}>
         {chatContent.map(
-          (curContent: { role: string; content: string }, index: number) =>
-            curContent.role === 'system' ? (
+          (
+            curContent: {
+              role: string
+              summary: string
+              recommendation?: string[]
+            },
+            index: number
+          ) =>
+            curContent.role === 'user' ? (
               <div
                 key={index}
                 className={style.talk}
                 style={{ marginLeft: 'auto' }}>
                 <Card style={{ width: 200 }}>
-                  <p>{curContent.content}</p>
+                  <p>{curContent.summary}</p>
                 </Card>
                 <Avatar src="https://api.dicebear.com/9.x/adventurer/svg?seed=Kiki" />
               </div>
@@ -39,9 +61,24 @@ function Chat() {
                 className={style.talk}
                 style={{ marginRight: 'auto' }}>
                 <Avatar src="https://robohash.org/yixingzhang" />
-                <Card style={{ width: 200 }}>
-                  <p>{curContent.content}</p>
-                </Card>
+                <div className={style.cardsWrapper}>
+                  <Card style={{ width: 200 }}>
+                    <p>{curContent.summary}</p>
+                  </Card>
+                  {curContent.recommendation && (
+                    <div style={{ marginTop: '10px' }}>
+                      {curContent.recommendation.map((recom, i) => (
+                        <Card
+                          onClick={() => setInputValue(recom)}
+                          hoverable={true}
+                          key={i}
+                          style={{ width: 100, marginTop: '5px' }}>
+                          <p>{recom}</p>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             )
         )}

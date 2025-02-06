@@ -6,6 +6,7 @@ import { ChangeMessageSetting } from './redux/action/action'
 import _ from 'lodash'
 import { AppState } from './redux/store'
 import { ReduxProviderWrapper } from './redux/store'
+import WrapperWithButton, { figWrapperProps } from '../wrapperButton'
 type DataItem = {
   label: Date
   value: number
@@ -131,11 +132,11 @@ interface AreaProps {
   height: string
   left: string
   top: string
-  offsetLeft:string
-  offsetTop:string
-  position: 'absolute' | 'fixed'
-  interactionType?: string
-  allowedinteractionType?: string
+  x: string
+  y: string
+  interactionKey: string
+  interactionType: string
+  allowedinteractionType: string
 }
 
 const Area: React.FC<AreaProps> = ({
@@ -144,7 +145,6 @@ const Area: React.FC<AreaProps> = ({
   height,
   left,
   top,
-  position,
   interactionType,
   allowedinteractionType,
 }) => {
@@ -191,22 +191,70 @@ const Area: React.FC<AreaProps> = ({
   }, [curMessage.hoverOrNot])
 
   return (
-    <ReduxProviderWrapper>
-      <div
-        ref={chartRef}
-        style={{
-          width: width,
-          height: height,
-          position: position,
-          left: left,
-          top: top,
-        }}></div>
-    </ReduxProviderWrapper>
+    <div
+      ref={chartRef}
+      style={{
+        width: width,
+        height: height,
+        // qqqq
+        position: 'absolute',
+        left: left,
+        top: top,
+      }}></div>
   )
 }
 const AreaWithRedux: React.FC<AreaProps> = (props) => (
   <ReduxProviderWrapper>
     <Area {...props} />
   </ReduxProviderWrapper>
-);
-export default AreaWithRedux
+)
+
+const AreaWithWrapper: React.FC<figWrapperProps & AreaProps> = ({
+  data,
+  width,
+  height,
+  left,
+  top,
+  offsetLeft,
+  offsetTop,
+  x,
+  y,
+  id,
+  interactionType,
+  interactionKey,
+  allowedinteractionType,
+  // allowedinteractionKey
+}) => {
+  // Calculate new width and height
+  const newWidth = `100%`
+  const newHeight = `95%`
+  const newLeft = '10px'
+  const newTop = '10px'
+
+  return (
+    <WrapperWithButton
+      width={width}
+      height={height}
+      id={id}
+      left={left} // Fixed left position
+      top={top} // Fixed top position
+      offsetLeft={offsetLeft}
+      offsetTop={offsetTop}>
+      <AreaWithRedux
+        data={data}
+        width={newWidth}
+        height={newHeight}
+        left={newLeft}
+        top={newTop}
+        x={x}
+        y={y}
+        interactionType={interactionType}
+        interactionKey={interactionKey}
+        allowedinteractionType={allowedinteractionType}
+        // allowedinteractionKey={allowedinteractionKey}
+      />
+    </WrapperWithButton>
+  )
+}
+
+export default AreaWithWrapper

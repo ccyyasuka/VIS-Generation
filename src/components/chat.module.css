@@ -20,7 +20,11 @@
 .talk {
   display: flex;
   font-size: 12px;
-  margin-bottom: 5px;
+  margin: 5px;
+}
+.cardsWrapper {
+  display: flex;
+  flex-direction: column;
 }
 .ques {
   height: 10%;
@@ -28,4 +32,8 @@
   justify-content: center;
   align-items: center;
   padding: 2px 30px;
+}
+.main :global(.ant-card) :global(.ant-card-body) {
+  padding: 8px !important; /* 覆盖 padding */
+  border-radius: 8px !important; /* 覆盖 border-radius */
 }

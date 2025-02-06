@@ -43,6 +43,30 @@ function FileUpload() {
     onChange: onSelectChange,
   }
 
+  const handleJsonFileSelect = async (e: Event) => {
+    const target = e.target as HTMLInputElement
+    const file = target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      try {
+        const content = JSON.parse(event.target?.result as string)
+        dispatch(
+          updateKV({
+            selectedData: content.data,
+            config: content.curConfig,
+          })
+        )
+        message.success('JSON 数据加载成功')
+      } catch (error) {
+        message.error('加载 JSON 数据时出错')
+      }
+    }
+
+    reader.readAsText(file)
+  }
+
   const uploadProps: UploadProps = {
     name: 'file',
     multiple: false,
@@ -119,6 +143,19 @@ function FileUpload() {
         {/* 选择按钮 */}
         <Button type="primary" onClick={handleSelectData}>
           选择
+        </Button>
+        <Button
+          onClick={() => {
+            const input = document.createElement('input')
+            input.type = 'file'
+            input.accept = '.json'
+            // 使用 addEventListener 来绑定事件，确保正确的事件类型
+            input.addEventListener('change', handleJsonFileSelect)
+            input.click()
+          }}
+          type="primary"
+          style={{ marginTop: '20px' }}>
+          加载 JSON 配置
         </Button>
       </Space>
     </div>

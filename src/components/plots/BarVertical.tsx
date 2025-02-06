@@ -5,6 +5,8 @@ import { useDispatch, useSelector } from 'react-redux'
 import { ChangeMessageSetting } from './redux/action/action'
 import _ from 'lodash'
 import { AppState, ReduxProviderWrapper } from './redux/store'
+import WrapperWithButton, {figWrapperProps} from '../wrapperButton'
+
 type BarDataItem = {
   // qqqq
   label: string
@@ -132,6 +134,7 @@ interface BarProps {
   interactionType: string
   interactionKey: string
   allowedinteractionType: string
+  // allowedinteractionKey: string
 }
 // qqqq
 const Bar: React.FC<BarProps> = ({
@@ -153,6 +156,7 @@ const Bar: React.FC<BarProps> = ({
   const chartRef = useRef<HTMLDivElement>(null)
   // qqqq
   function preprocessData() {
+    console.log("item0205",data,x,y)
     return data.map((item) => {
       return { label: item[x].toString() as string, value: item[y] as number }
     })
@@ -243,136 +247,8 @@ const BarWithRedux: React.FC<BarProps> = (props) => (
   </ReduxProviderWrapper>
 )
 
-interface WrapperWithButtonProps {
-  children: ReactNode
-  offsetLeft: string
-  offsetTop: string
-  width: string
-  height: string
-  left: string
-  top: string
-}
 
-const WrapperWithButton: React.FC<WrapperWithButtonProps> = ({
-  children,
-  width,
-  height,
-  left,
-  top,
-  offsetLeft,
-  offsetTop,
-}) => {
-  const [isVisible, setIsVisible] = useState(true)
-  const [position, setPosition] = useState({ left, top })
-  const [isDragging, setIsDragging] = useState(false)
-  const dragStartPos = useRef({ x: 0, y: 0 })
-  const containerRef = useRef<HTMLDivElement | null>(null)
-
-  // 计算基于百分比的实际像素值
-  const getPositionInPixels = () => {
-    // debugger
-    const offsetLeftFloat = parseInt(offsetLeft, 10) // 将 '15px' 转换为 15
-    const offsetTopFloat = parseInt(offsetTop, 10)
-    return { offsetLeftFloat, offsetTopFloat }
-  }
-
-  const { offsetLeftFloat, offsetTopFloat } = getPositionInPixels()
-
-  // 开始拖拽
-  const handleMouseDown = (e: React.MouseEvent) => {
-    // debugger
-    setIsDragging(true)
-    e.preventDefault()
-  }
-
-  // 拖拽中
-  const handleMouseMove = (e: MouseEvent) => {
-    // debugger
-    e.preventDefault()
-    console.log('isDragging', isDragging)
-    if (isDragging) {
-      // debugger
-      const newLeft = e.clientX - offsetLeftFloat - 10
-      const newTop = e.clientY - offsetTopFloat - 10
-      // 更新位置
-      setPosition({
-        left: `${newLeft}px`,
-        top: `${newTop}px`,
-      })
-    }
-  }
-
-  // 拖拽结束
-  const handleMouseUp = (e: MouseEvent) => {
-    // debugger
-    e.preventDefault()
-    setIsDragging(false)
-  }
-
-  useEffect(() => {
-    const container = containerRef.current
-    if (container) {
-      container.addEventListener('mousemove', handleMouseMove)
-      container.addEventListener('mouseup', handleMouseUp)
-      return () => {
-        container.removeEventListener('mousemove', handleMouseMove)
-        container.removeEventListener('mouseup', handleMouseUp)
-      }
-    }
-  }, [isDragging])
-
-  if (!isVisible) return null
-
-  return (
-    <div
-      ref={containerRef}
-      style={{
-        position: 'absolute',
-        left: position.left,
-        top: position.top,
-        width,
-        height,
-        border: '1px solid gray',
-        padding: '10px',
-        borderRadius: '5px',
-        display: 'inline-block',
-      }}>
-      <div
-        onMouseDown={handleMouseDown}
-        // onMouseUp={handleMouseUp}
-        style={{
-          position: 'absolute',
-          left: '0',
-          top: '0',
-          width: '20px',
-          height: '20px',
-          backgroundColor: 'gray',
-          cursor: 'move',
-        }}
-      />
-      {children}
-      <button
-        onClick={() => setIsVisible(false)}
-        style={{
-          position: 'absolute',
-          bottom: '5px',
-          right: '10px',
-          backgroundColor: '#f0f0f0',
-          border: '1px solid #ccc',
-          borderRadius: '3px',
-          cursor: 'pointer',
-        }}>
-        Close
-      </button>
-    </div>
-  )
-}
-
-interface BarWrapperProps {
-  offsetLeft: string
-  offsetTop: string
-}
-const BarWithWrapper: React.FC<BarWrapperProps & BarProps> = ({
+const BarWithWrapper: React.FC<figWrapperProps & BarProps> = ({
   data,
   width,
   height,
@@ -380,11 +256,13 @@ const BarWithWrapper: React.FC<BarWrapperProps & BarProps> = ({
   top,
   offsetLeft,
   offsetTop,
+  id,
   x,
   y,
   interactionType,
   interactionKey,
   allowedinteractionType,
+  // allowedinteractionKey
 }) => {
   // Calculate new width and height
   const newWidth = `100%`
@@ -396,6 +274,7 @@ const BarWithWrapper: React.FC<BarWrapperProps & BarProps> = ({
     <WrapperWithButton
       width={width}
       height={height}
+      id={id}
       left={left} // Fixed left position
       top={top} // Fixed top position
       offsetLeft={offsetLeft}
@@ -411,6 +290,7 @@ const BarWithWrapper: React.FC<BarWrapperProps & BarProps> = ({
         interactionType={interactionType}
         interactionKey={interactionKey}
         allowedinteractionType={allowedinteractionType}
+        // allowedinteractionKey={allowedinteractionKey}
       />
     </WrapperWithButton>
   )

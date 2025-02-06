@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { ChangeMessageSetting } from './redux/action/action'
 import _ from 'lodash'
 import { AppState, ReduxProviderWrapper } from './redux/store'
+import WrapperWithButton, {figWrapperProps} from '../wrapperButton'
 type BarDataItem = {
   // qqqq
   label: string
@@ -245,5 +246,53 @@ const BarWithRedux: React.FC<BarProps> = (props) => (
   </ReduxProviderWrapper>
 )
 
-export default BarWithRedux
+const BarWithWrapper: React.FC<figWrapperProps & BarProps> = ({
+  data,
+  width,
+  height,
+  left,
+  top,
+  offsetLeft,
+  offsetTop,
+  id,
+  x,
+  y,
+  interactionType,
+  interactionKey,
+  allowedinteractionType,
+  // allowedinteractionKey
+}) => {
+  // Calculate new width and height
+  const newWidth = `100%`
+  const newHeight = `95%`
+  const newLeft = '10px'
+  const newTop = '10px'
+
+  return (
+    <WrapperWithButton
+      width={width}
+      height={height}
+      id={id}
+      left={left} // Fixed left position
+      top={top} // Fixed top position
+      offsetLeft={offsetLeft}
+      offsetTop={offsetTop}>
+      <BarWithRedux
+        data={data}
+        width={newWidth}
+        height={newHeight}
+        left={newLeft}
+        top={newTop}
+        x={x}
+        y={y}
+        interactionType={interactionType}
+        interactionKey={interactionKey}
+        allowedinteractionType={allowedinteractionType}
+        // allowedinteractionKey={allowedinteractionKey}
+      />
+    </WrapperWithButton>
+  )
+}
+
+export default BarWithWrapper
 // export default Bar

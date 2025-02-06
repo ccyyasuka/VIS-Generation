@@ -1,10 +1,12 @@
+from asyncio.windows_events import NULL
 from unicodedata import name
 import uuid
+import json
+import re
 import shutil
 from typing import Annotated, Literal, Optional, List, Tuple, Union, Callable
 from langchain_openai import ChatOpenAI
 from typing_extensions import TypedDict
-from pydantic import BaseModel
 from langgraph.graph.message import AnyMessage, add_messages
 from langchain_anthropic import ChatAnthropic
 from langchain_community.tools.tavily_search import TavilySearchResults
@@ -25,13 +27,10 @@ from langgraph.graph import StateGraph, START, END
 from langchain_core.messages import ToolMessage
 from langchain_core.runnables import RunnableLambda
 from langgraph.prebuilt import ToolNode
-from tools import calculate_statistics, calculate_pairwise_statistics, get_column_names
-
+from tools import calculate_statistics, calculate_pairwise_statistics, get_column_names, show_dataframe_head
+from tools import remove_nans, extract_columns, groupby_column, filter_dataframe, rename_columns, sort_by_column
 from langchain_core.tools import tool
 from typing import Optional, List, Dict
-
-
-
 
 
 # tools:
@@ -86,7 +85,10 @@ class State(TypedDict):
     plan: List[str]
     past_steps: Annotated[List[Tuple], operator.add]
     response: str
-    file_path: Optional[str] 
+    file_path: Optional[str]
+    dataframe: pd.DataFrame
+    middle_dataframe: pd.DataFrame
+
 # class State(TypedDict):
 #     messages: Annotated[list[AnyMessage], add_messages]
 #     dialog_state: Annotated[
@@ -185,24 +187,24 @@ def _print_event(event: dict, _printed: set, max_length=1500):
             _printed.add(message.id)
 
 
-def create_entry_node(assistant_name: str, new_dialog_state: str) -> Callable:
-    def entry_node(state: State) -> dict:
-        tool_call_id = state["messages"][-1].tool_calls[0]["id"]
-        return {
-            "messages": [
-                ToolMessage(
-                    content=f"The assistant is now the {assistant_name}. Reflect on the above conversation between the host assistant and the user."
-                    f" The user's intent is unsatisfied. Use the provided tools to assist the user. Remember, you are {assistant_name},"
-                    " and the booking, update, other other action is not complete until after you have successfully invoked the appropriate tool."
-                    " If the user changes their mind or needs help for other tasks, call the CompleteOrEscalate function to let the primary host assistant take control."
-                    " Do not mention who you are - just act as the proxy for the assistant.",
-                    tool_call_id=tool_call_id,
-                )
-            ],
-            "dialog_state": new_dialog_state,
-        }
+# def create_entry_node(assistant_name: str, new_dialog_state: str) -> Callable:
+#     def entry_node(state: State) -> dict:
+#         tool_call_id = state["messages"][-1].tool_calls[0]["id"]
+#         return {
+#             "messages": [
+#                 ToolMessage(
+#                     content=f"The assistant is now the {assistant_name}. Reflect on the above conversation between the host assistant and the user."
+#                     f" The user's intent is unsatisfied. Use the provided tools to assist the user. Remember, you are {assistant_name},"
+#                     " and the booking, update, other other action is not complete until after you have successfully invoked the appropriate tool."
+#                     " If the user changes their mind or needs help for other tasks, call the CompleteOrEscalate function to let the primary host assistant take control."
+#                     " Do not mention who you are - just act as the proxy for the assistant.",
+#                     tool_call_id=tool_call_id,
+#                 )
+#             ],
+#             "dialog_state": new_dialog_state,
+#         }
 
-    return entry_node
+#     return entry_node
 
 
 class Plan(BaseModel):
@@ -278,7 +280,6 @@ def replan_step(state: State):
         return {}
     else:
         return {"plan": output.action.steps}
-
 
 
 error_corrector_prompt = ChatPromptTemplate.from_template(
@@ -524,25 +525,148 @@ error_corrector = error_corrector_prompt | ChatOpenAI(
     model="gpt-4o", temperature=0
 ).with_structured_output(Response)
 
+
 def error_correct_step(state: State):
     ini_result = state["messages"][-1].content
-    state["ini_result"]=ini_result
+    state["ini_result"] = ini_result
     output = error_corrector.invoke(state)
     return {"response": output.response}
 
 
+# data_constructor_prompt = ChatPromptTemplate.from_messages([
+#     (
+#         "system",
+#         """**Data Analysis Orchestrator v2.1**
+        
+# # Mission Profile
+# You are an autonomous data analysis engine designed to perform professional-grade data operations. Strictly follow this pipeline:
+
+# PHASE 1: DATA CONTEXTUALIZATION
+# 1. Requisition Clarification: 
+#    - Validate scope with user if ambiguity >15%
+   
+# 2. Data Ontology Mapping:
+#    ↳ Execute `get_column_names` → Establish schema blueprint
+#    ↳ Run `calculate_statistics` → Capture baseline metrics
+
+# PHASE 2: EXPLORATORY ANALYSIS PLAN
+# 3. Hypothesis Generation:
+#    - Identify 3-5 key dimensions for deep analysis 
+#    - Highlight potential data quality flags using `show_dataframe_head`
+#    - Propose 2-3 non-obvious analytical angles
+
+# 4. Tool Selection Matrix:
+#    Prioritize operations:
+#    - Data Sanitization: `remove_nans` → `filter_dataframe`
+#    - Feature Engineering: `extract_columns` → `groupby_column`
+#    - Dimensional Analysis: `calculate_pairwise_statistics` + `sort_by_column`
+
+# PHASE 3: INTELLIGENT TRANSFORMATION
+# 5. Adaptive Preprocessing:
+#    - Apply `rename_columns` for semantic normalization
+#    - Validate distribution shifts post-transformation
+#    - Maintain data lineage through versioned operations
+
+# 6. Strategic Output Packaging:
+#    - Select optimal visualization anchors
+#    - Prepare 2-3 actionable insights with confidence intervals
+#    - Generate data dictionary for transformed schema
+
+# Execution Protocols
+# - Data Conservation: Always preserve raw data copies
+# - Statistical Significance: Validate n≥30 for parametric tests
+# - Transparency: Log all transformation decisions
+# - Fallback: Use `TavilySearchResults` for domain context when feature meaning is ambiguous
+
+# Current Operational Context: {time}"""
+#     ),
+#     ("placeholder", "{messages}"),
+# ]).partial(time=datetime.now)
+
+# data_constructor_tools = [
+#     TavilySearchResults(max_results=2),
+#     calculate_statistics,
+#     calculate_pairwise_statistics,
+#     get_column_names,
+#     remove_nans, extract_columns, groupby_column, filter_dataframe, rename_columns, sort_by_column,
+#     show_dataframe_head
+# ]
+
+
+class ToCorrector(BaseModel):
+    """Transfer the work to the corrector assistant. """
+
+    request: str = Field(
+        description="After completing the task analysis, determine whether it is correct."
+    )
+
+
+class ToPrimaryAssistant(BaseModel):
+    """Transfer the work to the primary assistant. """
+
+    request: str = Field(
+        description="Transfer the work to the primary assistant."
+    )
+
+
+llm1 = ChatOpenAI(model="gpt-4o", temperature=0)
+# data_constructor_runnable = data_constructor_prompt | llm1.bind_tools(
+#     data_constructor_tools + [ToCorrector]
+# )
 # 主agent
 primary_assistant_prompt = ChatPromptTemplate.from_messages(
     [
         (
             "system",
             "You are a specialized assistant for data analyst. "
-            "\nCurrent time: {time}."
             "\n\nIf the user needs help, and none of your tools are appropriate for it, then"
             ' "CompleteOrEscalate" the dialog to the host assistant. Do not waste the user\'s time. Do not make up invalid tools or functions.'
-            "\n\nThe user has provided the file path: {file_path}"
+            "\n\nThe user has provided the dataframe"
             """
-            You are now a data analyst, and your task is to perform tasks step-by-step according to the execution plan, analyze the data to uncover deep insights, and then generate visualizations to present to users. I will provide you with the syntax for the visualization chart library, and you need to generate a brief summary, create the corresponding visualization grammar, and offer recommendations for the next steps in analysis. Note that you should adhere to the relevant design principles of the visualization grammar, and if you do not know them, you should refer to these principles.
+            You are now a data analyst, and your task is to perform tasks step-by-step according to the execution plan, analyze the data to uncover deep insights, and then generate visualizations to present to users.
+            # Mission Profile
+You are an autonomous data analysis engine designed to perform professional-grade data operations. Strictly follow this pipeline:
+
+PHASE 1: DATA CONTEXTUALIZATION
+1. Requisition Clarification: 
+   - Validate scope with user if ambiguity >15%
+   
+2. Data Ontology Mapping:
+   ↳ Execute `get_column_names` → Establish schema blueprint
+   ↳ Run `calculate_statistics` → Capture baseline metrics
+
+PHASE 2: EXPLORATORY ANALYSIS PLAN
+3. Hypothesis Generation:
+   - Identify 3-5 key dimensions for deep analysis 
+   - Highlight potential data quality flags using `show_dataframe_head`
+   - Propose 2-3 non-obvious analytical angles
+
+4. Tool Selection Matrix:
+   Prioritize operations:
+   - Data Sanitization: `remove_nans` → `filter_dataframe`
+   - Feature Engineering: `extract_columns` → `groupby_column`
+   - Dimensional Analysis: `calculate_pairwise_statistics` + `sort_by_column`
+
+PHASE 3: INTELLIGENT TRANSFORMATION
+5. Adaptive Preprocessing:
+   - Apply `rename_columns` for semantic normalization
+   - Validate distribution shifts post-transformation
+   - Maintain data lineage through versioned operations
+
+6. Strategic Output Packaging:
+   - Select optimal visualization anchors
+   - Prepare 2-3 actionable insights with confidence intervals
+   - Generate data dictionary for transformed schema
+
+Execution Protocols
+- Data Conservation: Always preserve raw data copies
+- Statistical Significance: Validate n≥30 for parametric tests
+- Transparency: Log all transformation decisions
+- Fallback: Use `TavilySearchResults` for domain context when feature meaning is ambiguous
+            
+            I will provide you with the syntax for the visualization chart library, and you need to generate a brief summary, create the corresponding visualization grammar, and offer recommendations for the next steps in analysis.
+            Note that when you perform data analysis and draw visual charts, you MUST rely on the intermediate results of the previous data analysis. You can perceive the intermediate results of the data analysis through functions such as calculate_statistics, calculate_pairwise_statistics, get_column_names, and show_dataframe_head.
+            Note that you should adhere to the relevant design principles of the visualization grammar, and if you do not know them, you should refer to these principles.
             When you have completed the data analysis and decide to enter the replan phase, your output format should be:
             {{
                 "reply": "string" // A summary of data analysis not exceeding 50 characters.
@@ -615,33 +739,19 @@ primary_assistant_prompt = ChatPromptTemplate.from_messages(
     ]
 ).partial(time=datetime.now)
 
-llm = ChatOpenAI(model="gpt-4o", temperature=0)
 
 primary_assistant_tools = [
     TavilySearchResults(max_results=2),
     calculate_statistics,
     calculate_pairwise_statistics,
-    get_column_names
+    get_column_names,
+    remove_nans, extract_columns, groupby_column, filter_dataframe, rename_columns, sort_by_column,
+    show_dataframe_head
 ]
 
 
-class ToCorrector(BaseModel):
-    """Transfer the work to the corrector assistant. """
-
-    request: str = Field(
-        description="After completing the task analysis, determine whether it is correct."
-    )
-
-
-class ToPrimaryAssistant(BaseModel):
-    """Transfer the work to the primary assistant. """
-
-    request: str = Field(
-        description="Transfer the work to the primary assistant."
-    )
-
-
-assistant_runnable = primary_assistant_prompt | llm.bind_tools(
+# llm2 = ChatOpenAI(model="gpt-4o", temperature=0)
+assistant_runnable = primary_assistant_prompt | llm1.bind_tools(
     primary_assistant_tools
     + [ToCorrector]
 )
@@ -650,19 +760,39 @@ assistant_runnable = primary_assistant_prompt | llm.bind_tools(
 builder = StateGraph(State)
 builder.add_node("plan_step", plan_step)
 
-builder.add_node(
-    "enter_primary_assistant",
-    create_entry_node("primary assistant", "primary assistant"),
-)
+# builder.add_node("data_constructor", Assistant(data_constructor_runnable))
+# builder.add_node("data_constructor_tools",
+#                  create_tool_node_with_fallback(data_constructor_tools))
+
+
+# builder.add_node(
+#     "enter_primary_assistant",
+#     create_entry_node("primary assistant", "primary assistant"),
+# )
 builder.add_node("primary_assistant", Assistant(assistant_runnable))
 builder.add_node("primary_assistant_tools",
                  create_tool_node_with_fallback(primary_assistant_tools))
-builder.add_node(
-    "enter_replan",
-    create_entry_node("enter replan", "enter_replan"),
-)
+# builder.add_node(
+#     "enter_replan",
+#     create_entry_node("enter replan", "enter_replan"),
+# )
 builder.add_node("replan", replan_step)
 builder.add_node("error_correction", error_correct_step)
+
+
+def route_data_constructor(
+    state: State,
+):
+    route = tools_condition(state)
+    if route == END:
+        return "error_correction"
+    if route == "primary_assistant":
+        return "primary_assistant"
+    tool_calls = state["messages"][-1].tool_calls
+    if tool_calls:
+        return "data_constructor_tools"
+    raise ValueError("Invalid route")
+
 
 def route_primary_assistant(
     state: State,
@@ -704,8 +834,26 @@ def route_replan_assistant(
 
 
 builder.add_edge(START, "plan_step")
+
+
 builder.add_edge("plan_step", "primary_assistant")
-builder.add_edge("enter_primary_assistant", "primary_assistant")
+
+
+# builder.add_edge("plan_step", "data_constructor")
+# builder.add_conditional_edges(
+#     "data_constructor",
+#     route_data_constructor,
+#     [
+#         "primary_assistant",
+#         "data_constructor_tools",
+#         "error_correction"
+#     ],
+# )
+# builder.add_edge("data_constructor_tools", "data_constructor")
+# builder.add_edge("data_constructor", "primary_assistant")
+
+
+# builder.add_edge("enter_primary_assistant", "primary_assistant")
 builder.add_conditional_edges(
     "primary_assistant",
     route_primary_assistant,
@@ -750,24 +898,43 @@ config = {
 
 def stream_graph_updates(user_input: str, path: str):
     state = {"messages": [("user", user_input)], "file_path": path}
-    for event in graph.stream(state, config, stream_mode="values"):
-        event["messages"][-1].pretty_print()
+    df = NULL
+    if path.endswith(".xlsx") or path.endswith(".xls"):
+        # 读取Excel文件
+        df = pd.read_excel(path)
+    elif path.endswith(".csv"):
+        # 读取CSV文件
+        df = pd.read_csv(path)
+    else:
+        raise ValueError(
+            "Unsupported file format. Please provide an Excel (.xlsx/.xls) or CSV (.csv) file.")
+    state["dataframe"] = df.to_json(orient='records')
+    state["middle_dataframe"] = df.to_json(orient='records')
+    for event in graph.stream(state, config, stream_mode="updates"):
+        print(event)
     print("responseresponseresponseresponseresponseresponseresponseresponseresponseresponse")
-    print(event["response"])
-    return event["response"]
-    print("aaaaa")
+    print(event['error_correction']["response"])
+    cleaned_json = re.sub(r'[\x00-\x1f]', '', event['error_correction']["response"])
+    print("******************************************")
+    print(cleaned_json)
+    result = json.loads(cleaned_json)
+    result["analyze_data"]=state["middle_dataframe"]
+    json_str = json.dumps(result, ensure_ascii=False, indent=4)
+    return json_str
 
 
 def main():
-    path = input("path: ")
+    path = "./uploads/nba.csv"
+    user_input = "我上传了文件，请你首先先自行描述一下数据，挖掘一些潜在的insight"
     while True:
-        user_input = input("User: ")
+        # user_input = input("User: ")
         if user_input.lower() in ["quit", "exit", "q"]:
             print("Goodbye!")
             break
-        stream_graph_updates(user_input, path) 
+        stream_graph_updates(user_input, path)
 
 
 # 启动异步事件循环
 # main()
 # ./uploads/k.csv   挖掘数据，分析出一些insight，视图展示
+# 我想看看25岁以下球员命中率与三分球命中率的关系
