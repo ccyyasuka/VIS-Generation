@@ -10,6 +10,7 @@ import WrapperWithButton, {figWrapperProps} from '../wrapperButton'
 type LineDataItem = {
   label: string // Typically, this would be a category or time point
   value: number // Value for that point
+  groupBy: string | null
   [key: string]: any
 }
 
@@ -18,18 +19,19 @@ function drawLineChart(
   element: HTMLSpanElement,
   dispatch: any,
   interactionType: string,
-  interactionkey: string, //指明原始key
-  curInteractionKey: string //指明是label还是value
+  interactionkey: string, // 指明原始key
+  curInteractionKey: string // 指明是label还是value
 ): void {
   if (!element) {
-    // If no element provided, append a new div to the body
+    // 如果没有提供元素，则在 body 中追加一个新的 div
     element = document.body.appendChild(document.createElement('div'))
   } else {
-    // Clear the element contents
+    // 清空元素内容
     while (element.firstChild) {
       element.removeChild(element.firstChild)
     }
   }
+
   const handleHover = (message: number) => {
     const highlightMessage: messageType = {
       hoverOrNot: true,
@@ -44,20 +46,20 @@ function drawLineChart(
         ...highlightMessage,
       })
     )
-
-    // if (setHighlightMessage) setHighlightMessage(highlightMessage)
   }
+
   const handleLeave = () => {
     dispatch(ChangeMessageSetting({ message: '', hoverOrNot: false }))
   }
+
   const handleHoverThrottled = _.throttle(handleHover, 200)
 
-  // Set dimensions and margins of the graph
-  const width = element.clientWidth // Use the width of the container
-  const height = element.clientHeight // Use the height of the container
+  // 设置图表的尺寸和边距
+  const width = element.clientWidth // 使用容器的宽度
+  const height = element.clientHeight // 使用容器的高度
   const margin = { top: 20, right: 30, bottom: 40, left: 90 }
 
-  // Create SVG element inside the container
+  // 在容器中创建 SVG 元素
   const svg = d3
     .select(element)
     .append('svg')
@@ -71,10 +73,16 @@ function drawLineChart(
   const innerWidth = width - margin.left - margin.right
   const innerHeight = height - margin.top - margin.bottom
 
-  // Create scales
+  // 新增分组逻辑
+  const groups = Array.from(new Set(data.map((d) => d.groupBy))).filter(
+    Boolean
+  ) as string[]
+  const labels = Array.from(new Set(data.map((d) => d.label)))
+
+  // 创建嵌套比例尺
   const x = d3
     .scaleBand()
-    .domain(data.map((d) => d.label))
+    .domain(labels)
     .range([0, innerWidth])
     .padding(0.1)
 
@@ -83,56 +91,95 @@ function drawLineChart(
     .domain([0, d3.max(data, (d) => d.value) as number])
     .range([innerHeight, 0])
 
-  // Add X axis
+  // 颜色比例尺
+  const color = d3
+    .scaleOrdinal<string>()
+    .domain(groups)
+    .range(d3.schemeCategory10)
+
+  // 添加 X 轴
   chart
     .append('g')
     .attr('transform', `translate(0,${innerHeight})`)
     .call(d3.axisBottom(x))
 
-  // Add Y axis
+  // 添加 Y 轴
   chart.append('g').call(d3.axisLeft(y))
 
-  // Add the line
-  chart
-    .append('path')
-    .datum(data)
-    .attr('fill', 'none')
-    .attr('stroke', 'steelblue')
-    .attr('stroke-width', 1.5)
-    .attr('class', 'lines')
-    .attr(
-      'd',
-      d3
-        .line<DataItem>()
-        .x((d) => (x(d.label) as number) + x.bandwidth() / 2) // Center the line in the band
-        .y((d) => y(d.value))
-    )
-  chart
-    .selectAll('circle')
-    .data(data)
+  // 按组绘制折线
+  groups.forEach((group) => {
+    const groupData = data.filter((d) => d.groupBy === group)
+
+    // 添加折线
+    chart
+      .append('path')
+      .datum(groupData)
+      .attr('fill', 'none')
+      .attr('stroke', color(group))
+      .attr('stroke-width', 1.5)
+      .attr('class', 'lines')
+      .attr(
+        'd',
+        d3
+          .line<LineDataItem>()
+          .x((d) => (x(d.label) as number) + x.bandwidth() / 2) // 在 band 中居中
+          .y((d) => y(d.value))
+      )
+
+    // 添加数据点
+    chart
+      .selectAll(`.points-${group}`)
+      .data(groupData)
+      .enter()
+      .append('circle')
+      .attr('cx', (d) => (x(d.label) as number) + x.bandwidth() / 2)
+      .attr('cy', (d) => y(d.value))
+      .attr('r', 3) // 点的半径
+      .attr('fill', color(group)) // 点的颜色
+      .attr('class', `points points-${group}`)
+      .attr('data-value', (d) => d.value.toFixed(2))
+      .attr('data-label', (d) => d.label)
+      .on('mouseenter', (event, d) => {
+        handleHoverThrottled(d[curInteractionKey as string])
+        svg
+          .selectAll('circle')
+          .transition()
+          .duration(150)
+          .style('opacity', function () {
+            return this === event.currentTarget ? '1' : '0.618' // 当前点保持不变，其他点透明度为 0.618
+          })
+      })
+      .on('mouseleave', (event, d) => {
+        handleLeave()
+        svg.selectAll('circle').transition().duration(150).style('opacity', '1') // 恢复透明度
+      })
+  })
+
+  // 添加图例（可选）
+  const legend = svg
+    .append('g')
+    .attr('font-family', 'sans-serif')
+    .attr('font-size', 10)
+    .attr('text-anchor', 'start')
+    .selectAll('g')
+    .data(groups)
     .enter()
-    .append('circle')
-    .attr('cx', (d) => (x(d.label) as number) + x.bandwidth() / 2)
-    .attr('cy', (d) => y(d.value))
-    .attr('r', 3) // Radius of the circle
-    .attr('fill', 'red') // Color of the circle
-    .attr('class', 'points')
-    .attr('data-value', (d) => d.value.toFixed(2))
-    .attr('data-label', (d) => d.label)
-    .on('mouseenter', (event, d) => {
-      handleHoverThrottled(d[curInteractionKey as string])
-      svg
-        .selectAll('rect')
-        .transition()
-        .duration(150)
-        .style('opacity', function () {
-          return this === event.currentTarget ? '1' : '0.618' // 对当前rect保持不变，其他的设置透明度为0.618
-        })
-    })
-    .on('mouseleave', (event, d) => {
-      handleLeave()
-      svg.selectAll('rect').transition().duration(150).style('opacity', '1') // 保证透明度回到1
-    })
+    .append('g')
+    .attr('transform', (d, i) => `translate(${width - 100},${i * 20})`)
+
+  legend
+    .append('rect')
+    .attr('x', 0)
+    .attr('width', 19)
+    .attr('height', 19)
+    .attr('fill', color)
+
+  legend
+    .append('text')
+    .attr('x', 24)
+    .attr('y', 9.5)
+    .attr('dy', '0.32em')
+    .text((d) => d)
 }
 type DataItem = {
   [key: string]: any
@@ -149,6 +196,7 @@ interface LineProps {
   interactionKey: string
   allowedinteractionType: string
   // allowedinteractionKey: string
+  groupBy: string | null
 }
 
 const Line: React.FC<LineProps> = ({
@@ -163,6 +211,7 @@ const Line: React.FC<LineProps> = ({
   interactionKey,
   allowedinteractionType,
   // allowedinteractionKey
+  groupBy = null,
 }) => {
   const chartRef = useRef<HTMLDivElement>(null)
   const curMessage: messageType = useSelector(
@@ -170,8 +219,22 @@ const Line: React.FC<LineProps> = ({
   )
   const dispatch = useDispatch()
   function preprocessData() {
+    console.log('item0205', data, x, y)
     return data.map((item) => {
-      return { label: item[x].toString() as string, value: item[y] as number }
+      // 判断 item 中是否有 category 这个键
+      if (groupBy && item.hasOwnProperty(groupBy)) {
+        return {
+          label: item[x].toString(),
+          value: item[y] as number,
+          groupBy: item[groupBy] as string,
+        }
+      } else {
+        return {
+          label: item[x].toString(),
+          value: item[y] as number,
+          groupBy: null,
+        }
+      }
     })
   }
   useEffect(() => {
@@ -402,6 +465,7 @@ const BarWithWrapper: React.FC<figWrapperProps & LineProps> = ({
   interactionKey,
   allowedinteractionType,
   // allowedinteractionKey
+  groupBy = null,
 }) => {
   // Calculate new width and height
   const newWidth = `100%`
@@ -430,6 +494,7 @@ const BarWithWrapper: React.FC<figWrapperProps & LineProps> = ({
         interactionKey={interactionKey}
         allowedinteractionType={allowedinteractionType}
         // allowedinteractionKey={allowedinteractionKey}
+        groupBy={groupBy}
       />
     </WrapperWithButton>
   )

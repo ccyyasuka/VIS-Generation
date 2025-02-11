@@ -27,7 +27,7 @@ const initialState: DataState = {
   error: null,
   chatContent: [
     { role: 'user', summary: '你好，请问你是谁' },
-    { role: 'assistant', summary: '我是你的智能可视化分析助手' },
+    { role: 'assistant', summary: '我是你的智能可视分析助手' },
   ],
   selectedData: null,
   config: null,

@@ -5,23 +5,129 @@ import { useDispatch, useSelector } from 'react-redux'
 import { ChangeMessageSetting } from './redux/action/action'
 import _ from 'lodash'
 import { AppState, ReduxProviderWrapper } from './redux/store'
-import WrapperWithButton, {figWrapperProps} from '../wrapperButton'
+import WrapperWithButton, { figWrapperProps } from '../wrapperButton'
 
 type BarDataItem = {
   // qqqq
   label: string
   value: number
+  groupBy: string | null
   [key: string]: any
 }
 // 纵向柱状图
+// function drawBarChart(
+//   data: BarDataItem[],
+//   element: HTMLSpanElement,
+//   dispatch: any,
+//   interactionType: string,
+//   interactionkey: string, //指明原始key
+//   curInteractionKey: string //指明是label还是value
+// ): void {
+//   const handleHover = (message: number) => {
+//     const highlightMessage: messageType = {
+//       hoverOrNot: true,
+//       message: parseFloat(message.toFixed(2)),
+//       interactionType: interactionType || 'default',
+//       interactionKey: interactionkey || 'default',
+//     }
+
+//     dispatch(
+//       ChangeMessageSetting({
+//         ...highlightMessage,
+//       })
+//     )
+//   }
+//   const handleLeave = () => {
+//     dispatch(ChangeMessageSetting({ message: '', hoverOrNot: false }))
+//   }
+//   const handleHoverThrottled = _.throttle(handleHover, 200)
+
+//   if (!element) {
+//     element = document.body.appendChild(document.createElement('span'))
+//   } else {
+//     while (element.firstChild) {
+//       element.removeChild(element.firstChild)
+//     }
+//   }
+
+//   const container =
+//     element || document.body.appendChild(document.createElement('span'))
+
+//   // Set dimensions and margins of the graph
+//   const width = container.clientWidth
+//   const height = container.clientHeight
+//   const margin = { top: 20, right: 30, bottom: 40, left: 50 }
+
+//   // Create SVG element inside the container
+//   const svg = d3
+//     .select(container)
+//     .append('svg')
+//     .attr('width', width)
+//     .attr('height', height)
+
+//   const chart = svg
+//     .append('g')
+//     .attr('transform', `translate(${margin.left}, ${margin.top})`)
+
+//   const innerWidth = width - margin.left - margin.right
+//   const innerHeight = height - margin.top - margin.bottom
+
+//   // Create X axis (categorical)
+//   const x = d3
+//     .scaleBand()
+//     .domain(data.map((d) => d.label))
+//     .range([0, innerWidth])
+//     .padding(0.1)
+//   chart
+//     .append('g')
+//     .attr('transform', `translate(0,${innerHeight})`)
+//     .call(d3.axisBottom(x))
+
+//   // Create Y axis (numerical)
+//   const y = d3
+//     .scaleLinear()
+//     .domain([0, d3.max(data, (d) => d.value) as number])
+//     .range([innerHeight, 0])
+//   chart.append('g').call(d3.axisLeft(y))
+
+//   // Bars
+//   chart
+//     .selectAll('rect')
+//     .data(data)
+//     .enter()
+//     .append('rect')
+//     .attr('x', (d) => x(d.label) as number)
+//     .attr('y', (d) => y(d.value)) // Start from the top for vertical bars
+//     .attr('width', x.bandwidth())
+//     .attr('height', (d) => innerHeight - y(d.value)) // Calculate height from value
+//     .attr('fill', '#69b3a2')
+//     .attr('class', 'bars')
+//     .attr('data-value', (d) => d.value.toFixed(2))
+//     .attr('data-label', (d) => d.label)
+//     .on('mouseenter', (event, d) => {
+//       handleHoverThrottled(d[curInteractionKey as string])
+//       svg
+//         .selectAll('rect')
+//         .transition()
+//         .duration(150)
+//         .style('opacity', function () {
+//           return this === event.currentTarget ? '1' : '0.618'
+//         })
+//     })
+//     .on('mouseleave', (event, d) => {
+//       handleLeave()
+//       svg.selectAll('rect').transition().duration(150).style('opacity', '1')
+//     })
+// }
 function drawBarChart(
   data: BarDataItem[],
   element: HTMLSpanElement,
   dispatch: any,
   interactionType: string,
-  interactionkey: string, //指明原始key
-  curInteractionKey: string //指明是label还是value
+  interactionkey: string,
+  curInteractionKey: string
 ): void {
+  // ...保持原有的 handleHover 和 handleLeave 函数不变...
   const handleHover = (message: number) => {
     const highlightMessage: messageType = {
       hoverOrNot: true,
@@ -29,35 +135,26 @@ function drawBarChart(
       interactionType: interactionType || 'default',
       interactionKey: interactionkey || 'default',
     }
-
     dispatch(
       ChangeMessageSetting({
         ...highlightMessage,
       })
     )
   }
+  const handleHoverThrottled = _.throttle(handleHover, 200)
+
   const handleLeave = () => {
     dispatch(ChangeMessageSetting({ message: '', hoverOrNot: false }))
   }
-  const handleHoverThrottled = _.throttle(handleHover, 200)
-
-  if (!element) {
+  if (!element)
     element = document.body.appendChild(document.createElement('span'))
-  } else {
-    while (element.firstChild) {
-      element.removeChild(element.firstChild)
-    }
-  }
+  else while (element.firstChild) element.removeChild(element.firstChild)
 
-  const container =
-    element || document.body.appendChild(document.createElement('span'))
-
-  // Set dimensions and margins of the graph
+  const container = element
   const width = container.clientWidth
   const height = container.clientHeight
   const margin = { top: 20, right: 30, bottom: 40, left: 50 }
 
-  // Create SVG element inside the container
   const svg = d3
     .select(container)
     .append('svg')
@@ -71,52 +168,96 @@ function drawBarChart(
   const innerWidth = width - margin.left - margin.right
   const innerHeight = height - margin.top - margin.bottom
 
-  // Create X axis (categorical)
-  const x = d3
-    .scaleBand()
-    .domain(data.map((d) => d.label))
-    .range([0, innerWidth])
-    .padding(0.1)
-  chart
-    .append('g')
-    .attr('transform', `translate(0,${innerHeight})`)
-    .call(d3.axisBottom(x))
+  // 新增分组逻辑
+  const groups = Array.from(new Set(data.map((d) => d.groupBy))).filter(
+    Boolean
+  ) as string[]
+  const labels = Array.from(new Set(data.map((d) => d.label)))
 
-  // Create Y axis (numerical)
+  // 创建嵌套比例尺
+  const x0 = d3
+    .scaleBand()
+    .domain(labels)
+    .range([0, innerWidth])
+    .paddingInner(0.1)
+
+  const x1 = d3
+    .scaleBand()
+    .domain(groups)
+    .range([0, x0.bandwidth()])
+    .padding(0.05)
+
   const y = d3
     .scaleLinear()
     .domain([0, d3.max(data, (d) => d.value) as number])
     .range([innerHeight, 0])
-  chart.append('g').call(d3.axisLeft(y))
 
-  // Bars
+  // 颜色比例尺
+  const color = d3
+    .scaleOrdinal<string>()
+    .domain(groups)
+    .range(d3.schemeCategory10)
+
+  // 绘制柱子
   chart
-    .selectAll('rect')
+    .selectAll('.bar-group')
     .data(data)
     .enter()
     .append('rect')
-    .attr('x', (d) => x(d.label) as number)
-    .attr('y', (d) => y(d.value)) // Start from the top for vertical bars
-    .attr('width', x.bandwidth())
-    .attr('height', (d) => innerHeight - y(d.value)) // Calculate height from value
-    .attr('fill', '#69b3a2')
-    .attr('class', 'bars')
+    .attr('class', 'bar-group')
+    .attr('x', (d) => x0(d.label)! + x1(d.groupBy!)!)
+    .attr('y', (d) => y(d.value))
+    .attr('width', x1.bandwidth())
+    .attr('height', (d) => innerHeight - y(d.value))
+    .attr('fill', (d) => color(d.groupBy!))
     .attr('data-value', (d) => d.value.toFixed(2))
     .attr('data-label', (d) => d.label)
     .on('mouseenter', (event, d) => {
-      handleHoverThrottled(d[curInteractionKey as string])
-      svg
-        .selectAll('rect')
+      handleHoverThrottled(d[curInteractionKey])
+      d3.select(event.currentTarget).transition().style('opacity', 1)
+      d3.selectAll('.bar-group')
+        .filter((n) => n !== d)
         .transition()
-        .duration(150)
-        .style('opacity', function () {
-          return this === event.currentTarget ? '1' : '0.618'
-        })
+        .style('opacity', 0.6)
     })
-    .on('mouseleave', (event, d) => {
+    .on('mouseleave', () => {
       handleLeave()
-      svg.selectAll('rect').transition().duration(150).style('opacity', '1')
+      d3.selectAll('.bar-group').transition().style('opacity', 1)
     })
+
+  // 添加坐标轴
+  chart
+    .append('g')
+    .attr('transform', `translate(0,${innerHeight})`)
+    .call(d3.axisBottom(x0))
+
+  chart.append('g').call(d3.axisLeft(y))
+
+  // 添加图例（可选）
+  const legend = svg
+    .append('g')
+    .attr('font-family', 'sans-serif')
+    .attr('font-size', 10)
+    .attr('text-anchor', 'start')
+    .selectAll('g')
+    .data(groups)
+    .enter()
+    .append('g')
+    .attr('transform', (d, i) => `translate(${width - 100},${i * 20})`)
+
+  legend
+    .append('rect')
+    .attr('x', 0)
+    .attr('width', 19)
+    .attr('height', 19)
+    .attr('fill', color)
+
+  legend
+    .append('text')
+    .attr('x', 24)
+    .attr('y', 9.5)
+    .attr('dy', '0.32em')
+    .text((d) => d)
 }
 
 // qqqq
@@ -135,6 +276,7 @@ interface BarProps {
   interactionKey: string
   allowedinteractionType: string
   // allowedinteractionKey: string
+  groupBy: string | null
 }
 // qqqq
 const Bar: React.FC<BarProps> = ({
@@ -148,6 +290,7 @@ const Bar: React.FC<BarProps> = ({
   interactionType,
   interactionKey,
   allowedinteractionType,
+  groupBy = null,
 }) => {
   const dispatch = useDispatch()
   const curMessage: messageType = useSelector(
@@ -156,9 +299,22 @@ const Bar: React.FC<BarProps> = ({
   const chartRef = useRef<HTMLDivElement>(null)
   // qqqq
   function preprocessData() {
-    console.log("item0205",data,x,y)
+    console.log('item0205', data, x, y)
     return data.map((item) => {
-      return { label: item[x].toString() as string, value: item[y] as number }
+      // 判断 item 中是否有 category 这个键
+      if (groupBy && item.hasOwnProperty(groupBy)) {
+        return {
+          label: item[x].toString(),
+          value: item[y] as number,
+          groupBy: item[groupBy] as string,
+        }
+      } else {
+        return {
+          label: item[x].toString(),
+          value: item[y] as number,
+          groupBy: null,
+        }
+      }
     })
   }
 
@@ -247,7 +403,6 @@ const BarWithRedux: React.FC<BarProps> = (props) => (
   </ReduxProviderWrapper>
 )
 
-
 const BarWithWrapper: React.FC<figWrapperProps & BarProps> = ({
   data,
   width,
@@ -263,6 +418,7 @@ const BarWithWrapper: React.FC<figWrapperProps & BarProps> = ({
   interactionKey,
   allowedinteractionType,
   // allowedinteractionKey
+  groupBy = null,
 }) => {
   // Calculate new width and height
   const newWidth = `100%`
@@ -291,6 +447,7 @@ const BarWithWrapper: React.FC<figWrapperProps & BarProps> = ({
         interactionKey={interactionKey}
         allowedinteractionType={allowedinteractionType}
         // allowedinteractionKey={allowedinteractionKey}
+        groupBy={groupBy}
       />
     </WrapperWithButton>
   )
