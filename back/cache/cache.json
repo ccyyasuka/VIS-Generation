@@ -1,0 +1,57 @@
+[
+    {
+        "Player":"Jabari Smith Jr.",
+        "Team":"HOU",
+        "AST":101
+    },
+    {
+        "Player":"Shaedon Sharpe",
+        "Team":"POR",
+        "AST":94
+    },
+    {
+        "Player":"Malaki Branham",
+        "Team":"SAS",
+        "AST":127
+    },
+    {
+        "Player":"AJ Griffin",
+        "Team":"ATL",
+        "AST":73
+    },
+    {
+        "Player":"Jeremy Sochan",
+        "Team":"SAS",
+        "AST":142
+    },
+    {
+        "Player":"Jalen Duren",
+        "Team":"DET",
+        "AST":75
+    },
+    {
+        "Player":"Ousmane Dieng",
+        "Team":"OKC",
+        "AST":46
+    },
+    {
+        "Player":"Dominick Barlow",
+        "Team":"SAS",
+        "AST":24
+    },
+    {
+        "Player":"Nikola Jovic",
+        "Team":"MIA",
+        "AST":10
+    },
+    {
+        "Player":"Kendall Brown",
+        "Team":"IND",
+        "AST":3
+    },
+    {
+        "Player":"Trevor Keels",
+        "Team":"NYK",
+        "AST":0
+    }
+]

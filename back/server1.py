@@ -10,7 +10,7 @@ import json
 import re
 import time
 from generateMock import generate_mock
-from mygraph import stream_graph_updates
+from graph_helper import stream_graph_updates
 
 app = Flask(__name__)
 #
@@ -42,6 +42,9 @@ def chat():
     global ROUND
     user_input = request.json.get("message", "")
     file_path = request.json.get("filePath", "")
+    cur_graphs = request.json.get("graphConfig", "")
+    if not isinstance(cur_graphs, str):
+        cur_graphs = json.dumps(cur_graphs)
     file_path = os.path.join(UPLOAD_FOLDER, file_path)
     if (MOCK):
         mock_res = generate_mock(ROUND)
@@ -58,39 +61,40 @@ def chat():
             'analyze_result': content_dict["graphs_grammar"],
             'recommendation': content_dict["recommendation"]})
 
-    res = stream_graph_updates(user_input, file_path)
-    try:
-        # 尝试将 res.content 解析为 JSON
-        content_dict = json.loads(res)
-
-        # 如果解析成功，确保所需键存在
-        reply = content_dict.get('reply', 'No reply provided')
-        graphs_grammar = content_dict.get('graphs_grammar', [])
-        recommendation = content_dict.get('recommendation', [])
-
-    except json.JSONDecodeError:
-        # 如果解析失败，则假设 res.content 是纯文本
-        content_dict = {
-            'reply': res.content,
-            'graphs_grammar': [],
-            'recommendation': []
+    res = stream_graph_updates(user_input, file_path, cur_graphs)
+    content_dict = res
+    graph_data = content_dict.get('middle_dataframe', [])
+    reply = content_dict.get('reply', 'No reply provided')
+    graphs_grammar = content_dict.get(
+        'graphs_grammar', [])
+    recommendation = content_dict.get(
+        'recommendation', [])
+    graph_layout = content_dict.get(
+        'graph_layout', [])
+    converted_graph_layout = [
+        {
+            "id": layout.id,
+            "description": layout.description,
+            "meta": {
+                "width": layout.meta.width,
+                "height": layout.meta.height,
+                "left": layout.meta.left,
+                "top": layout.meta.top
+            }
         }
-        reply = res.content
-        graphs_grammar = []
-        recommendation = []
-        return jsonify({'status': '成功',
-                        'summary': res.content,
-                        'analyze_result': [],
-                        'recommendation': []})
-
-    content_dict = json.loads(res)
+        for layout in graph_layout
+    ]
+    
 
     return jsonify({
         'role': 'system',
         'status': '成功',
-        'summary': content_dict["reply"],
-        'analyze_result': content_dict["graphs_grammar"],
-        'recommendation': content_dict["recommendation"]})
+        'graph_data': graph_data,
+        'reply': reply,
+        'graphs_grammar': graphs_grammar,
+        "recommendation": recommendation,
+        "graph_layout": converted_graph_layout
+    })
     # content_dict = json.loads(res.content)
 
     # return jsonify({
@@ -163,42 +167,81 @@ def upload_file():
     file_path = os.path.join(UPLOAD_FOLDER, file_path)
     file.save(file_path)
     user_input = "我上传了文件，请你首先先自行描述一下数据，挖掘一些潜在的insight"
+    cur_graphs = "[]"
 
-    res = stream_graph_updates(user_input, file_path)
+    res = stream_graph_updates(user_input, file_path, cur_graphs)
     print("resresresresresresresresresresresresresresres")
-    print(res)
-    try:
-        # 尝试将 res.content 解析为 JSON
-        content_dict = json.loads(res)
 
-        # 如果解析成功，确保所需键存在
-        reply = content_dict.get('reply', 'No reply provided')
-        graphs_grammar = content_dict.get('graphs_grammar', [])
-        recommendation = content_dict.get('recommendation', [])
+    # try:
+    #     # 尝试将 res.content 解析为 JSON
+    #     content_dict = json.loads(res)
 
-    except json.JSONDecodeError:
-        # 如果解析失败，则假设 res.content 是纯文本
-        content_dict = {
-            'reply': res.content,
-            'graphs_grammar': [],
-            'recommendation': []
+    #     # 如果解析成功，确保所需键存在
+    #     reply = content_dict.get('reply', 'No reply provided')
+    #     graphs_grammar = content_dict.get('graphs_grammar', [])
+    #     recommendation = content_dict.get('recommendation', [])
+
+    # except json.JSONDecodeError:
+    #     # 如果解析失败，则假设 res.content 是纯文本
+    #     content_dict = {
+    #         'reply': res.content,
+    #         'graphs_grammar': [],
+    #         'recommendation': []
+    #     }
+    #     reply = res.content
+    #     graphs_grammar = []
+    #     recommendation = []
+    #     return jsonify({'status': '成功',
+    #                     'summary': res.content,
+    #                     'analyze_result': [],
+    #                     'recommendation': []})
+
+    content_dict = res
+    graph_data = content_dict.get('middle_dataframe', [])
+    reply = content_dict.get('reply', 'No reply provided')
+    graphs_grammar = content_dict.get(
+        'graphs_grammar', [])
+    recommendation = content_dict.get(
+        'recommendation', [])
+    graph_layout = content_dict.get(
+        'graph_layout', [])
+    # graphs_grammar["data"] = graph_data
+    # graphs_grammar["id"] = graph_id
+    # graphs_grammar = json.dumps(graphs_grammar)
+    # recommendation = content_dict.get('recommendation', [])
+    # reserve_charts_ids = content_dict.get('reserve_charts_ids', [])
+    converted_graph_layout = [
+        {
+            "id": layout.id,
+            "description": layout.description,
+            "meta": {
+                "width": layout.meta.width,
+                "height": layout.meta.height,
+                "left": layout.meta.left,
+                "top": layout.meta.top
+            }
         }
-        reply = res.content
-        graphs_grammar = []
-        recommendation = []
-        return jsonify({'status': '成功',
-                        'summary': res.content,
-                        'analyze_result': [],
-                        'recommendation': []})
-
-    content_dict = json.loads(res)
+        for layout in graph_layout
+    ]
+    print({
+        'role': 'system',
+        'status': '成功',
+        'reply': reply,
+        'graphs_grammar': graphs_grammar,
+        "recommendation": recommendation,
+        "graph_layout": converted_graph_layout
+    })
 
     return jsonify({
         'role': 'system',
         'status': '成功',
-        'summary': content_dict["reply"],
-        'analyze_result': content_dict["graphs_grammar"],
-        'recommendation': content_dict["recommendation"]})
+        'graph_data': graph_data,
+        'reply': reply,
+        'graphs_grammar': graphs_grammar,
+        "recommendation": recommendation,
+        "graph_layout": converted_graph_layout
+    })
+
 
     # except Exception as e:
     #     return jsonify({'error': str(e)}), 500

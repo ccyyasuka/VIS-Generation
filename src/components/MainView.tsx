@@ -42,42 +42,43 @@ const MainView: React.FC<MainViewProps> = ({ offset }) => {
   const { left, top } = offset
   // 偏移值
 
-  // const { selectedData, config } = useSelector((state: any) => state.data)
+  const { selectedData, config } = useSelector((state: any) => state.data)
   // // console.log('selectedData, config', selectedData, config)
   // const data: any[] = selectedData
 
-  // const curConfig: ConfigItem[] = config
+  const curConfig: ConfigItem[] = config
+  console.log('curConfig', curConfig)
 
   // console.log('datadatadatadata11111', data, curConfig)
   // 统计数据测试样例
-  const data1: any = [
-    { year: '2019', height: 11, weight: 22, value: 54, category: 'A' },
-    { year: '2020', height: 10, weight: 160, value: 90, category: 'A' },
-    { year: '2021', height: 190, weight: 29, value: 62, category: 'A' },
-    { year: '2022', height: 190, weight: 120, value: 20, category: 'A' },
-    { year: '2023', height: 180, weight: 160, value: 10, category: 'A' },
-    { year: '2024', height: 280, weight: 220, value: 60, category: 'A' },
-    { year: '2019', height: 11, weight: 22, value: 54, category: 'B' },
-    { year: '2020', height: 10, weight: 160, value: 90, category: 'B' },
-    { year: '2021', height: 190, weight: 29, value: 62, category: 'B' },
-    { year: '2022', height: 80, weight: 120, value: 20, category: 'B' },
-    { year: '2023', height: 180, weight: 160, value: 10, category: 'B' },
-    { year: '2024', height: 280, weight: 220, value: 60, category: 'B' },
-  ]
-  const data2: any = [
-    { year: '2019', height: 11, weight: 22, value: 54, category: 'A' },
-    { year: '2020', height: 10, weight: 160, value: 90, category: 'A' },
-    { year: '2021', height: 170, weight: 29, value: 62, category: 'A' },
-    { year: '2022', height: 190, weight: 120, value: 20, category: 'A' },
-    { year: '2023', height: 180, weight: 160, value: 10, category: 'A' },
-    { year: '2024', height: 190, weight: 220, value: 60, category: 'A' },
-    { year: '2019', height: 11, weight: 22, value: 54, category: 'C' },
-    { year: '2020', height: 10, weight: 160, value: 90, category: 'C' },
-    { year: '2021', height: 190, weight: 29, value: 62, category: 'C' },
-    { year: '2022', height: 80, weight: 120, value: 20, category: 'C' },
-    { year: '2023', height: 180, weight: 160, value: 10, category: 'C' },
-    { year: '2024', height: 280, weight: 220, value: 60, category: 'C' },
-  ]
+  // const data1: any = [
+  //   { year: '2019', height: 11, weight: 22, value: 54, category: 'A' },
+  //   { year: '2020', height: 10, weight: 160, value: 90, category: 'A' },
+  //   { year: '2021', height: 190, weight: 29, value: 62, category: 'A' },
+  //   { year: '2022', height: 190, weight: 120, value: 20, category: 'A' },
+  //   { year: '2023', height: 180, weight: 160, value: 10, category: 'A' },
+  //   { year: '2024', height: 280, weight: 220, value: 60, category: 'A' },
+  //   { year: '2019', height: 11, weight: 22, value: 54, category: 'B' },
+  //   { year: '2020', height: 10, weight: 160, value: 90, category: 'B' },
+  //   { year: '2021', height: 190, weight: 29, value: 62, category: 'B' },
+  //   { year: '2022', height: 80, weight: 120, value: 20, category: 'B' },
+  //   { year: '2023', height: 180, weight: 160, value: 10, category: 'B' },
+  //   { year: '2024', height: 280, weight: 220, value: 60, category: 'B' },
+  // ]
+  // const data2: any = [
+  //   { year: '2019', height: 11, weight: 22, value: 54, category: 'A' },
+  //   { year: '2020', height: 10, weight: 160, value: 90, category: 'A' },
+  //   { year: '2021', height: 170, weight: 29, value: 62, category: 'A' },
+  //   { year: '2022', height: 190, weight: 120, value: 20, category: 'A' },
+  //   { year: '2023', height: 180, weight: 160, value: 10, category: 'A' },
+  //   { year: '2024', height: 190, weight: 220, value: 60, category: 'A' },
+  //   { year: '2019', height: 11, weight: 22, value: 54, category: 'C' },
+  //   { year: '2020', height: 10, weight: 160, value: 90, category: 'C' },
+  //   { year: '2021', height: 190, weight: 29, value: 62, category: 'C' },
+  //   { year: '2022', height: 80, weight: 120, value: 20, category: 'C' },
+  //   { year: '2023', height: 180, weight: 160, value: 10, category: 'C' },
+  //   { year: '2024', height: 280, weight: 220, value: 60, category: 'C' },
+  // ]
 
   // 地图数据测试样例
   // const data: any = {
@@ -129,111 +130,111 @@ const MainView: React.FC<MainViewProps> = ({ offset }) => {
 
   // // 历史行为习惯
   // // assistant api 大模型选择参数
-  const curConfig: ConfigItem[] = [
-    // {
-    //   name: 'ArcDiagram',
-    //   meta: {
-    //     width: '60%',
-    //     height: '60%',
-    //     left: '15%',
-    //     top: '5%',
-    //   },
-    //   interactionType: 'filter',
-    //   interactionKey: 'height',
-    //   allowedinteractionType: 'filter',
-    // },
-    // {
-    //   name: 'BarRight',
-    //   meta: {
-    //     width: '40%',
-    //     height: '20%',
-    //     left: '15%',
-    //     top: '5%',
-    //   },
-    //   x: 'year',
-    //   y: 'height',
-    //   interactionType: 'filter',
-    //   interactionKey: 'height',
-    //   allowedinteractionType: 'filter',
-    // },
-    {
-      name: 'BarVertical',
-      id: 'xcfgvh',
-      data: data1,
-      meta: {
-        width: '20%',
-        height: '60%',
-        left: '15%',
-        top: '5%',
-      },
-      x: 'year',
-      y: 'height',
-      interactionType: 'filter',
-      interactionKey: 'height',
-      allowedinteractionType: 'filter',
-      allowedinteractionKey: 'year',
-      groupBy: 'category',
-    },
-    // {
-    //   name: 'Donat',
-    //   meta: {
-    //     width: '30%',
-    //     height: '30%',
-    //     left: '25%',
-    //     top: '55%',
-    //   },
-    //   x: 'year',
-    //   y: 'height',
-    //   interactionType: 'filter',
-    //   interactionKey: 'height',
-    //   allowedinteractionType: 'filter',
-    // },
+  // const curConfig: ConfigItem[] = [
+  //   // {
+  //   //   name: 'ArcDiagram',
+  //   //   meta: {
+  //   //     width: '60%',
+  //   //     height: '60%',
+  //   //     left: '15%',
+  //   //     top: '5%',
+  //   //   },
+  //   //   interactionType: 'filter',
+  //   //   interactionKey: 'height',
+  //   //   allowedinteractionType: 'filter',
+  //   // },
+  //   // {
+  //   //   name: 'BarRight',
+  //   //   meta: {
+  //   //     width: '40%',
+  //   //     height: '20%',
+  //   //     left: '15%',
+  //   //     top: '5%',
+  //   //   },
+  //   //   x: 'year',
+  //   //   y: 'height',
+  //   //   interactionType: 'filter',
+  //   //   interactionKey: 'height',
+  //   //   allowedinteractionType: 'filter',
+  //   // },
+  //   {
+  //     name: 'BarVertical',
+  //     id: 'xcfgvh',
+  //     data: data1,
+  //     meta: {
+  //       width: '20%',
+  //       height: '60%',
+  //       left: '15%',
+  //       top: '5%',
+  //     },
+  //     x: 'year',
+  //     y: 'height',
+  //     interactionType: 'filter',
+  //     interactionKey: 'height',
+  //     allowedinteractionType: 'filter',
+  //     allowedinteractionKey: 'year',
+  //     groupBy: 'category',
+  //   },
+  //   // {
+  //   //   name: 'Donat',
+  //   //   meta: {
+  //   //     width: '30%',
+  //   //     height: '30%',
+  //   //     left: '25%',
+  //   //     top: '55%',
+  //   //   },
+  //   //   x: 'year',
+  //   //   y: 'height',
+  //   //   interactionType: 'filter',
+  //   //   interactionKey: 'height',
+  //   //   allowedinteractionType: 'filter',
+  //   // },
 
-    {
-      name: 'Line',
-      id: '19562',
-      data: data2,
-      meta: {
-        width: '30%',
-        height: '30%',
-        left: '65%',
-        top: '15%',
-      },
-      x: 'year',
-      y: 'height',
-      interactionType: 'filter',
-      interactionKey: 'year',
-      allowedinteractionType: 'filter',
-      allowedinteractionKey: 'height',
-      groupBy: 'category',
-    },
-    // {
-    //   name: 'Scatter',
-    //   meta: {
-    //     width: '30%',
-    //     height: '30%',
-    //     left: '15%',
-    //     top: '85%',
-    //   },
-    //   x: 'height',
-    //   y: 'weight',
-    //   z: 'value',
-    //   interactionType: 'filter',
-    //   interactionKey: 'height',
-    //   allowedinteractionType: 'filter',
-    // },
-    // {
-    //   name: 'Area',
-    //   meta: {
-    //     width: '30%',
-    //     height: '30%',
-    //     left: '25%',
-    //     top: '35%',
-    //   },
-    //   interactionType: 'filter',
-    //   allowedinteractionType: 'ByValue',
-    // },
-  ]
+  //   {
+  //     name: 'Line',
+  //     id: '19562',
+  //     data: data2,
+  //     meta: {
+  //       width: '30%',
+  //       height: '30%',
+  //       left: '65%',
+  //       top: '15%',
+  //     },
+  //     x: 'year',
+  //     y: 'height',
+  //     interactionType: 'filter',
+  //     interactionKey: 'year',
+  //     allowedinteractionType: 'filter',
+  //     allowedinteractionKey: 'height',
+  //     groupBy: 'category',
+  //   },
+  //   // {
+  //   //   name: 'Scatter',
+  //   //   meta: {
+  //   //     width: '30%',
+  //   //     height: '30%',
+  //   //     left: '15%',
+  //   //     top: '85%',
+  //   //   },
+  //   //   x: 'height',
+  //   //   y: 'weight',
+  //   //   z: 'value',
+  //   //   interactionType: 'filter',
+  //   //   interactionKey: 'height',
+  //   //   allowedinteractionType: 'filter',
+  //   // },
+  //   // {
+  //   //   name: 'Area',
+  //   //   meta: {
+  //   //     width: '30%',
+  //   //     height: '30%',
+  //   //     left: '25%',
+  //   //     top: '35%',
+  //   //   },
+  //   //   interactionType: 'filter',
+  //   //   allowedinteractionType: 'ByValue',
+  //   // },
+  // ]
 
   if (curConfig) {
     const renderComponents = curConfig.map(
