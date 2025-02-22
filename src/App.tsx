@@ -24,21 +24,25 @@ function App() {
       })
     }
   }, [])
+  console.log('offsetoffsetoffset', offset)
   return (
     <div className={style.app} ref={appRef}>
       <Provider store={store}>
         <div className={style.file}>
-          <Upload />
+          <div className={style.controlBar} ref={mainViewRef}>
+            <Upload />
+          </div>
+
+          <div className={style.table} ref={mainViewRef}>
+            <TableView></TableView>
+          </div>
         </div>
         <div className={style.middle}>
           <div className={style.mainView} ref={mainViewRef}>
             <MainView offset={offset} />
           </div>
-          <div className={style.table} ref={mainViewRef}>
-            <TableView></TableView>
-          </div>
         </div>
-        
+
         <div className={style.chat}>
           <Chat />
         </div>

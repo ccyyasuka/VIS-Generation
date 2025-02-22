@@ -65,6 +65,7 @@ const WrapperWithButton: React.FC<WrapperWithButtonProps> = ({
       LeftRef.current = `${newLeft}px`
       TopRef.current = `${newTop}px`
     }
+    console.log('LeftRefLeftRefLeftRef', LeftRef.current, TopRef.current)
   }
 
   // 拖拽结束
@@ -74,7 +75,7 @@ const WrapperWithButton: React.FC<WrapperWithButtonProps> = ({
     setIsDragging(false)
     const newLeft = parseFloat(position.left)
     const newTop = parseFloat(position.top)
-
+    console.log('LeftRefLeftRefLeftRef', LeftRef.current, TopRef.current)
     // 调用 Redux action 更新位置
     dispatch(updateConfigPosition(id, LeftRef.current, TopRef.current))
   }
@@ -103,9 +104,10 @@ const WrapperWithButton: React.FC<WrapperWithButtonProps> = ({
         width,
         height,
         border: '1px solid gray',
-        padding: '10px',
+        padding: '5px',
         borderRadius: '5px',
         display: 'inline-block',
+        boxSizing: 'border-box',
       }}>
       <svg
         style={{
@@ -190,7 +192,7 @@ const WrapperWithButton: React.FC<WrapperWithButtonProps> = ({
       />
 
       {children}
-      <button
+      {/* <button
         onClick={() => setIsVisible(false)}
         style={{
           position: 'absolute',
@@ -202,7 +204,7 @@ const WrapperWithButton: React.FC<WrapperWithButtonProps> = ({
           cursor: 'pointer',
         }}>
         Close
-      </button>
+      </button> */}
     </div>
   )
 }

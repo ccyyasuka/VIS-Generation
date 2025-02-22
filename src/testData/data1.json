@@ -1,0 +1,14 @@
+[
+  { "year": "2019", "height": 11, "weight": 22, "value": 54, "category": "A" },
+  { "year": "2020", "height": 10, "weight": 160, "value": 90, "category": "A" },
+  { "year": "2021", "height": 190, "weight": 29, "value": 62, "category": "A" },
+  { "year": "2022", "height": 190, "weight": 120, "value": 20, "category": "A" },
+  { "year": "2023", "height": 180, "weight": 160, "value": 10, "category": "A" },
+  { "year": "2024", "height": 280, "weight": 220, "value": 60, "category": "A" },
+  { "year": "2019", "height": 110, "weight": 22, "value": 54, "category": "B" },
+  { "year": "2020", "height": 130, "weight": 160, "value": 90, "category": "B" },
+  { "year": "2021", "height": 10, "weight": 29, "value": 62, "category": "B" },
+  { "year": "2022", "height": 180, "weight": 120, "value": 20, "category": "B" },
+  { "year": "2023", "height": 80, "weight": 160, "value": 10, "category": "B" },
+  { "year": "2024", "height": 80, "weight": 220, "value": 60, "category": "B" }
+]

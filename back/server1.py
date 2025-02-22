@@ -17,7 +17,7 @@ app = Flask(__name__)
 # 启用CORS，允许所有源访问（或你可以指定特定的源）
 CORS(app)
 UPLOAD_FOLDER = r'.\uploads'
-MOCK = False
+MOCK = True
 
 responses = [
     "你好，我是智能助手。",
@@ -47,19 +47,16 @@ def chat():
         cur_graphs = json.dumps(cur_graphs)
     file_path = os.path.join(UPLOAD_FOLDER, file_path)
     if (MOCK):
-        mock_res = generate_mock(ROUND)
-        ROUND += 1
-        summary = mock_res['summary']
-        result = mock_res['result']
-        recommendation = mock_res['recommendation']
-        content_dict = {"reply": "aaaa", "graphs_grammar": {},
-                        "recommendation": ["recom1", "recom2", "recom3"]}
+        time.sleep(1)
         return jsonify({
             'role': 'system',
             'status': '成功',
-            'summary': content_dict["reply"],
-            'analyze_result': content_dict["graphs_grammar"],
-            'recommendation': content_dict["recommendation"]})
+            'graph_data': "[]",
+            'reply': "reply",
+            'graphs_grammar': "[]",
+            "recommendation": """["a", "b", "c"]""",
+            "graph_layout": "[]"
+        })
 
     res = stream_graph_updates(user_input, file_path, cur_graphs)
     content_dict = res
@@ -84,7 +81,6 @@ def chat():
         }
         for layout in graph_layout
     ]
-    
 
     return jsonify({
         'role': 'system',

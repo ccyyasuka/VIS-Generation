@@ -3,7 +3,7 @@ import style from './chat.module.css'
 import { Input, Button, Card, Avatar } from 'antd'
 import { useDispatch, useSelector } from 'react-redux'
 import { AppDispatch } from './redux/store'
-import { sendChatMessage } from './redux/dataSlice'
+import { sendChatMessage, updateKV } from './redux/dataSlice'
 
 function Chat() {
   const [inputValue, setInputValue] = useState('')
@@ -24,7 +24,13 @@ function Chat() {
   }
   const handleSend = () => {
     if (inputValue.trim() === '') return
+    chatContent[chatContent.length-1].recommendation=[]
+    dispatch(updateKV({
+      chatContent: chatContent
+    }))
     dispatch(sendChatMessage(inputValue))
+    
+    
     setInputValue('') // Clear the input field after sending
     scrollToBottom()
   }

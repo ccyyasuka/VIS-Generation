@@ -6,7 +6,8 @@ import { InboxOutlined } from '@ant-design/icons'
 import type { UploadProps, RadioChangeEvent } from 'antd'
 import { message, Upload, Table, Radio, Space, Button } from 'antd'
 import type { TableProps } from 'antd'
-
+import style from './upload.module.css'
+import { saveAs } from 'file-saver'
 const { Dragger } = Upload
 type TableRowSelection<T extends object = object> =
   TableProps<T>['rowSelection']
@@ -17,30 +18,34 @@ function FileUpload() {
   const [viewMode, setViewMode] = useState<'字段详情' | '数据概览'>('字段详情')
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([])
 
-  const columnsForOverview = [
-    { title: '列名', dataIndex: 'title', key: 'title' },
-    { title: '数据类型', dataIndex: 'dataType', key: 'dataType' },
-  ]
 
-  const columnsForDetail = iniData?.data?.[0]
-    ? Object.keys(iniData.data[0]).map((key) => ({
-        title: key,
-        dataIndex: key,
-        key,
-      }))
-    : []
-
-  const handleViewModeChange = (e: RadioChangeEvent) => {
-    setViewMode(e.target.value)
-  }
-
-  const onSelectChange = (newSelectedRowKeys: React.Key[]) => {
-    setSelectedRowKeys(newSelectedRowKeys)
-  }
-
-  const rowSelection: TableRowSelection = {
-    selectedRowKeys,
-    onChange: onSelectChange,
+  const uploadProps: UploadProps = {
+    name: 'file',
+    multiple: false,
+    customRequest: async ({ file, onSuccess, onError, onProgress }) => {
+      try {
+        const result = await dispatch(uploadFileAndSetData(file as File) as any)
+        if (result.status === '成功') {
+          message.success('文件上传成功')
+          onSuccess?.({ code: '200' })
+          onProgress?.({ percent: 100 })
+        } else {
+          message.error('文件上传失败')
+          onError?.(new Error('上传失败'))
+        }
+      } catch (error) {
+        message.error('文件上传失败')
+        onError?.(error as Error)
+      }
+    },
+    progress: {
+      strokeColor: {
+        '0%': '#108ee9',
+        '100%': '#87d068',
+      },
+      strokeWidth: 3,
+      format: (percent) => percent && `${parseFloat(percent.toFixed(2))}%`,
+    },
   }
 
   const handleJsonFileSelect = async (e: Event) => {
@@ -66,84 +71,51 @@ function FileUpload() {
 
     reader.readAsText(file)
   }
-
-  const uploadProps: UploadProps = {
-    name: 'file',
-    multiple: false,
-    customRequest: async ({ file, onSuccess, onError, onProgress }) => {
-      try {
-        const result = await dispatch(uploadFileAndSetData(file as File) as any)
-        if (result.status === '成功') {
-          message.success('文件上传成功')
-          onSuccess?.({ code: '200' })
-          onProgress?.({ percent: 100 })
-        } else {
-          message.error('文件上传失败')
-          onError?.(new Error('上传失败'))
-        }
-      } catch (error) {
-        message.error('文件上传失败')
-        onError?.(error as Error)
-      }
-    },
-    onDrop(e) {
-      console.log('Dropped files', e.dataTransfer.files)
-    },
-    progress: {
-      strokeColor: {
-        '0%': '#108ee9',
-        '100%': '#87d068',
-      },
-      strokeWidth: 3,
-      format: (percent) => percent && `${parseFloat(percent.toFixed(2))}%`,
-    },
+  
+  const handleFileUploadClick = () => {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = '.csv,.xlsx,.xls,.json' // 根据需要设置接受的文件类型
+    input.addEventListener('change', handleFileSelect)
+    input.click()
   }
 
-  const handleSelectData = () => {
-    const filteredData = iniData.dataSelf.filter((item: any) =>
-      selectedRowKeys.includes(item.label)
-    )
-    dispatch(updateKV({ selectedData: filteredData }))
-    message.success('数据已选择')
+  const handleFileSelect = async (e: Event) => {
+    const target = e.target as HTMLInputElement
+    const file = target.files?.[0]
+    if (!file) return
+
+    try {
+      const result = await dispatch(uploadFileAndSetData(file as File) as any)
+      if (result.status === '成功') {
+        message.success('文件上传成功')
+      } else {
+        message.error('文件上传失败')
+      }
+    } catch (error) {
+      message.error('文件上传失败')
+    }
+  }
+
+  const { selectedData, config } = useSelector((state: any) => state.data)
+  const handleDownload = () => {
+    const content = JSON.stringify({ config }, null, 2)
+    const blob = new Blob([content], { type: 'application/json' })
+    saveAs(blob, 'data_and_config.json')
   }
 
   return (
-    <div>
-      <Space direction="vertical" size="large">
-        {/* 切换栏 */}
-        <Radio.Group value={viewMode} onChange={handleViewModeChange}>
-          <Radio.Button value="字段详情">字段详情</Radio.Button>
-          <Radio.Button value="数据概览">数据概览</Radio.Button>
-        </Radio.Group>
-
-        {/* 上传区域 */}
-        <Dragger {...uploadProps}>
-          <p className="ant-upload-drag-icon">
-            <InboxOutlined />
-          </p>
-          <p className="ant-upload-text">点击或拖拽文件到此处上传</p>
-        </Dragger>
-
-        {/* 表格显示 */}
-        {viewMode === '字段详情' ? (
-          <Table
-            rowSelection={rowSelection}
-            columns={columnsForOverview}
-            dataSource={iniData.columns}
-            rowKey="title"
-          />
-        ) : (
-          <Table
-            columns={columnsForDetail}
-            dataSource={iniData.dataSelf}
-            rowKey="title"
-          />
-        )}
-
-        {/* 选择按钮 */}
-        <Button type="primary" onClick={handleSelectData}>
-          选择
+    <div className={style.controlBar}>
+      <div className={style.head}>控制栏</div>
+      <div className={style.main}>
+        <Button
+          type="primary"
+          icon={<InboxOutlined />}
+          onClick={handleFileUploadClick}
+          style={{ marginTop: '20px' }}>
+          点击上传文件
         </Button>
+
         <Button
           onClick={() => {
             const input = document.createElement('input')
@@ -157,7 +129,14 @@ function FileUpload() {
           style={{ marginTop: '20px' }}>
           加载 JSON 配置
         </Button>
-      </Space>
+
+        <Button
+          onClick={handleDownload}
+          type="primary"
+          style={{ marginTop: '20px' }}>
+          导出当前视图
+        </Button>
+      </div>
     </div>
   )
 }

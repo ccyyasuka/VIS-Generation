@@ -7,10 +7,13 @@ import _ from 'lodash'
 import { AppState } from './redux/store'
 import { ReduxProviderWrapper } from './redux/store'
 import WrapperWithButton, { figWrapperProps } from '../wrapperButton'
+import applyTransformations from './tools/transformApply'
+import preprocessData from './tools/preprocess'
 type scatterDataItem = {
   x: number
   y: number
-  label: string
+  label: string | null
+  z?: number
   [key: string]: any
 }
 
@@ -20,12 +23,38 @@ function drawScatterPlot(
   dispatch: any,
   interactionType: string,
   interactionkey: string, //指明原始key
-  curInteractionKey: string //指明是label还是value
+  curInteractionKey: string, //指明是label还是value
+  xx: string,
+  yy: string,
+  zz?: string,
+  xAxis?: {
+    xAxisLabel?: string // x轴名称
+    format?: string // x轴坐标格式化函数
+    angle?: number // x轴标签旋转角度
+    tickSize?: number // x轴刻度线大小
+  },
+  yAxis?: {
+    yAxisLabel?: string // y轴名称
+    format?: string // y轴坐标格式化函数
+    angle?: number // y轴标签旋转角度
+    tickSize?: number // y轴刻度线大小
+  },
+  legend?: { open: boolean; legendPosition: string; legendOrientation: string },
+  tooltip?: { open: boolean; text: string },
+  color?: string[]
 ): void {
   const handleHover = (message: number) => {
+    let formattedMessage: string | number = message
+
+    if (typeof message === 'number') {
+      // 如果 message 是数字，则格式化为保留两位小数的字符串
+      formattedMessage = message.toFixed(2)
+    }
+    // 如果 message 是字符串，则保持不变
+
     const highlightMessage: messageType = {
       hoverOrNot: true,
-      message: parseFloat(message.toFixed(2)),
+      message: formattedMessage,
       interactionType: interactionType || 'default',
       interactionKey: interactionkey || 'default',
     }
@@ -56,7 +85,7 @@ function drawScatterPlot(
 
   const width = container.clientWidth
   const height = container.clientHeight
-  const margin = { top: 20, right: 30, bottom: 40, left: 40 }
+  const margin = { top: 30, right: 20, bottom: 40, left: 60 }
 
   const svg = d3
     .select(container)
@@ -81,13 +110,20 @@ function drawScatterPlot(
     .domain([0, d3.max(data, (d) => d.y) as number])
     .range([innerHeight, 0])
 
-  chart
-    .append('g')
-    .attr('transform', `translate(0,${innerHeight})`)
-    .call(d3.axisBottom(x))
+  // chart
+  //   .append('g')
+  //   .attr('transform', `translate(0,${innerHeight})`)
+  //   .call(d3.axisBottom(x))
 
-  chart.append('g').call(d3.axisLeft(y))
-
+  // chart.append('g').call(d3.axisLeft(y))
+  const uniqueLabels = Array.from(new Set(data.map((d) => d.label))).filter(
+    (item) => item !== null
+  )
+  const colorScale = d3
+    .scaleOrdinal(
+      color || d3.schemeCategory10 // Default to `d3.schemeCategory10` if no colors provided
+    )
+    .domain(uniqueLabels as string[])
   chart
     .selectAll('circle')
     .data(data)
@@ -96,27 +132,181 @@ function drawScatterPlot(
     .attr('cx', (d) => x(d.x))
     .attr('cy', (d) => y(d.y))
     .attr('r', 5)
-    .attr('fill', '#69b3a2')
     .attr('class', 'dots')
     .attr('data-y', (d) => d.y.toFixed(2))
     .attr('data-x', (d) => d.x.toFixed(2))
     .attr('data-label', (d) => d.label)
+    .attr('fill', (d) => colorScale(d.label as string))
     .on('mouseenter', (event, d) => {
       handleHoverThrottled(d[curInteractionKey as string])
+      if (tooltip?.open) {
+        const tooltipText = tooltip.text
+          .replace('{x}', d.x.toString())
+          .replace('{y}', d.y.toFixed(2))
+        tooltipElement
+          .html(tooltipText)
+          .style('visibility', 'visible')
+          .style('top', `${event.pageY + 5}px`)
+          .style('left', `${event.pageX + 5}px`)
+      }
       d3.select(event.currentTarget)
         .transition()
         .duration(150)
         .attr('r', 8)
         .attr('fill', '#3769b1')
     })
+    .on('mousemove', (event) => {
+      // 鼠标移动时，更新 tooltip 的位置
+      tooltipElement
+        .style('top', `${event.clientY + 5}px`) // 跟随鼠标垂直位置
+        .style('left', `${event.clientX + 5}px`) // 跟随鼠标水平位置
+    })
     .on('mouseleave', (event, d) => {
       handleLeave()
+      tooltipElement.style('visibility', 'hidden')
       d3.select(event.currentTarget)
         .transition()
         .duration(150)
         .attr('r', 5)
-        .attr('fill', '#69b3a2')
+        .attr('fill', colorScale(d.label as string))
     })
+  const tooltipElement = d3
+    .select(container)
+    .append('div')
+    .attr('class', 'tooltip')
+    .style('position', 'fixed')
+    .style('visibility', 'hidden')
+    .style('background', 'rgba(255, 255, 255, 0.8)') // 白色背景，透明度 80%
+    .style('color', 'black') // 文字颜色为黑色
+    .style('padding', '5px')
+    .style('border-radius', '5px')
+    .style('font-size', '12px')
+    .style('pointer-events', 'none') // 防止 tooltip 阻挡鼠标事件
+    .style('box-shadow', '0px 4px 8px rgba(0, 0, 0, 0.2)')
+
+  if (legend?.open) {
+    const legendGroup = svg
+      .append('g')
+      .attr('font-family', 'sans-serif')
+      .attr('font-size', 10)
+      .attr('text-anchor', 'start')
+
+    let legendTransform = ''
+    switch (legend.legendPosition) {
+      case 'top-left':
+        legendTransform = `translate(5, 1)`
+        break
+      case 'top-right':
+        legendTransform = `translate(${width - 100}, 1)`
+        break
+      case 'bottom-left':
+        legendTransform = `translate(20, ${height - 10})`
+        break
+      case 'bottom-right':
+        legendTransform = `translate(${width - 100}, ${height - 10})`
+        break
+      default:
+        legendTransform = `translate(${width - 100}, 20)`
+    }
+
+    legendGroup.attr('transform', legendTransform)
+
+    // Generate legend items
+    const legendItems = legendGroup
+      .selectAll('g')
+      .data(uniqueLabels as string[])
+      .enter()
+      .append('g')
+      .attr(
+        'transform',
+        (d, i) => `translate(${i * 40}, 0)` // Horizontal
+      )
+
+    legendItems
+      .append('rect')
+      .attr('x', 0)
+      .attr('width', 19)
+      .attr('height', 19)
+      .attr('fill', (d) => colorScale(d)) // Use the same color scale as the dots
+
+    legendItems
+      .append('text')
+      .attr('x', 24)
+      .attr('y', 9.5)
+      .attr('dy', '0.32em')
+      .text((d) => {
+        const text = d
+        // 如果文本超过10个字符，添加省略号
+        return text.length > 3 ? text.slice(0, 3) + '...' : text
+      })
+  }
+
+  if (xAxis) {
+    const xAxisFormat = xAxis.format || '{x}' // 默认格式 "{x}"
+    const xAxisLabel = xAxis.xAxisLabel || xx // 默认标签 'x'
+    const xAxisAngle = xAxis.angle || 0
+    const xAxisTickSize = xAxis.tickSize || 6
+
+    chart
+      .append('g')
+      .attr('transform', `translate(0,${innerHeight})`)
+      .call(
+        d3
+          .axisBottom(x)
+          .ticks(5)
+          .tickFormat((d: any) => {
+            // 使用 {x} 格式化
+            return xAxisFormat.replace(/{x}/g, d)
+          })
+          .tickSize(xAxisTickSize)
+      )
+      .selectAll('text')
+      .style('text-anchor', 'middle')
+      .attr('transform', `rotate(${xAxisAngle})`)
+
+    chart
+      .append('g')
+      .append('text')
+      .attr('x', innerWidth / 2)
+      .attr('y', innerHeight + margin.bottom - 10)
+      .style('text-anchor', 'middle')
+      .text(xAxisLabel)
+      .style('font-size', '14px')
+  }
+
+  if (yAxis) {
+    // y 轴
+    const yAxisFormat = yAxis.format || '{y}' // 默认格式 "{y}"
+    const yAxisLabel = yAxis.yAxisLabel || yy // 默认标签 'y'
+    const yAxisAngle = yAxis.angle || 0
+    const yAxisTickSize = yAxis.tickSize || 6
+
+    chart
+      .append('g')
+      .call(
+        d3
+          .axisLeft(y)
+          .ticks(5)
+          .tickFormat((d: any) => {
+            // 使用 {y} 格式化
+            return yAxisFormat.replace(/{y}/g, d)
+          })
+          .tickSize(yAxisTickSize)
+      )
+      .selectAll('text')
+      .style('text-anchor', 'middle')
+      .attr('transform', `rotate(${yAxisAngle}) translate(-12, 0)`)
+
+    chart
+      .append('g')
+      .append('text')
+      .attr('x', -innerHeight / 2)
+      .attr('y', -margin.left + 20)
+      .style('text-anchor', 'middle')
+      .attr('transform', 'rotate(-90)')
+      .text(yAxisLabel)
+      .style('font-size', '14px')
+  }
 }
 type DataItem = {
   [key: string]: any
@@ -129,10 +319,34 @@ interface ScatterProps {
   top: string
   x: string
   y: string
-  label?: string
+  z?: string
   interactionType: string
   interactionKey: string
   allowedinteractionType: string
+  groupBy: string | null
+  transform?: {
+    type: string
+    config: {
+      dimension: string
+      condition: string
+      value?: number
+    }
+  }
+  xAxis?: {
+    label?: string // x轴名称
+    format?: string // x轴坐标格式化函数
+    angle?: number // x轴标签旋转角度
+    tickSize?: number // x轴刻度线大小
+  }
+  yAxis?: {
+    label?: string // y轴名称
+    format?: string // y轴坐标格式化函数
+    angle?: number // y轴标签旋转角度
+    tickSize?: number // y轴刻度线大小
+  }
+  legend?: { open: boolean; legendPosition: string; legendOrientation: string }
+  tooltip?: { open: boolean; text: string }
+  color?: string[]
 }
 
 const Scatter: React.FC<ScatterProps> = ({
@@ -143,25 +357,32 @@ const Scatter: React.FC<ScatterProps> = ({
   top,
   x,
   y,
-  label,
+  z,
   interactionType,
   interactionKey,
   allowedinteractionType,
+  groupBy = null,
+  transform,
+  xAxis,
+  yAxis,
+  legend,
+  tooltip,
+  color,
 }) => {
   const dispatch = useDispatch()
   const curMessage: messageType = useSelector(
     (state: AppState) => state.message
   )
   const chartRef = useRef<HTMLDivElement>(null)
-  function preprocessData() {
-    return data.map((item) => {
-      return {
-        x: item[x] as number,
-        y: item[y] as number,
-        label: label ? item[label] : ('' as string),
-      }
-    })
-  }
+  const transformedData = applyTransformations(data, transform)
+  const processedData = preprocessData(transformedData, x, y, groupBy, z)
+  const updatedData = processedData.map((item) => ({
+    x: item.label, // label 改为 x
+    y: item.value, // value 改为 y
+    z: item.z, // z 保持不变
+    label: item.groupBy, // groupBy 改为 value
+  }))
+
   useEffect(() => {
     if (chartRef.current) {
       let curInteractionKey
@@ -176,12 +397,20 @@ const Scatter: React.FC<ScatterProps> = ({
           curInteractionKey = 'label'
       }
       drawScatterPlot(
-        preprocessData(),
+        updatedData,
         chartRef.current,
         dispatch,
         interactionType,
         interactionKey,
-        curInteractionKey
+        curInteractionKey,
+        x,
+        y,
+        z,
+        xAxis,
+        yAxis,
+        legend,
+        tooltip,
+        color
       )
     }
   }, [data])
@@ -258,10 +487,18 @@ const ScatterWithWrapper: React.FC<figWrapperProps & ScatterProps> = ({
   id,
   x,
   y,
+  z,
   interactionType,
   interactionKey,
   allowedinteractionType,
   // allowedinteractionKey
+  groupBy = null,
+  transform,
+  xAxis,
+  yAxis,
+  legend,
+  tooltip,
+  color,
 }) => {
   // Calculate new width and height
   const newWidth = `100%`
@@ -286,10 +523,18 @@ const ScatterWithWrapper: React.FC<figWrapperProps & ScatterProps> = ({
         top={newTop}
         x={x}
         y={y}
+        z={z}
         interactionType={interactionType}
         interactionKey={interactionKey}
         allowedinteractionType={allowedinteractionType}
         // allowedinteractionKey={allowedinteractionKey}
+        groupBy={groupBy}
+        transform={transform}
+        xAxis={xAxis}
+        yAxis={yAxis}
+        legend={legend}
+        tooltip={tooltip}
+        color={color}
       />
     </WrapperWithButton>
   )

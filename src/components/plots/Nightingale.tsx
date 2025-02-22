@@ -6,7 +6,9 @@ import { ChangeMessageSetting } from './redux/action/action'
 import _ from 'lodash'
 import { AppState } from './redux/store'
 import { ReduxProviderWrapper } from './redux/store'
-import WrapperWithButton, {figWrapperProps} from '../wrapperButton'
+import WrapperWithButton, { figWrapperProps } from '../wrapperButton'
+import applyTransformations from './tools/transformApply'
+import preprocessData from './tools/preprocess'
 type PieDataItem = {
   label: string
   value: number
@@ -19,7 +21,24 @@ function drawPieChart(
   dispatch: any,
   interactionType: string,
   interactionkey: string, // 指明原始key
-  curInteractionKey: string // 指明是label还是value
+  curInteractionKey: string, // 指明是label还是value
+  xx: string,
+  yy: string,
+  xAxis?: {
+    xAxisLabel?: string // x轴名称
+    format?: string // x轴坐标格式化函数
+    angle?: number // x轴标签旋转角度
+    tickSize?: number // x轴刻度线大小
+  },
+  yAxis?: {
+    yAxisLabel?: string // y轴名称
+    format?: string // y轴坐标格式化函数
+    angle?: number // y轴标签旋转角度
+    tickSize?: number // y轴刻度线大小
+  },
+  legend?: { open: boolean; legendPosition: string; legendOrientation: string },
+  tooltip?: { open: boolean; text: string },
+  color?: string[]
 ): void {
   if (!element) {
     element = document.body.appendChild(document.createElement('div'))
@@ -30,9 +49,17 @@ function drawPieChart(
   }
 
   const handleHover = (message: number) => {
+    let formattedMessage: string | number = message
+
+    if (typeof message === 'number') {
+      // 如果 message 是数字，则格式化为保留两位小数的字符串
+      formattedMessage = message.toFixed(2)
+    }
+    // 如果 message 是字符串，则保持不变
+
     const highlightMessage: messageType = {
       hoverOrNot: true,
-      message: parseFloat(message.toFixed(2)),
+      message: formattedMessage,
       interactionType: interactionType || 'default',
       interactionKey: interactionkey || 'default',
     }
@@ -44,21 +71,24 @@ function drawPieChart(
   }
 
   const handleHoverThrottled = _.throttle(handleHover, 200)
-
-  const width = element.clientWidth
-  const height = element.clientHeight
+  if (!element)
+    element = document.body.appendChild(document.createElement('span'))
+  else while (element.firstChild) element.removeChild(element.firstChild)
+  const container = element
+  const width = container.clientWidth
+  const height = container.clientHeight
   const radius = Math.min(width, height) / 2
 
   // Create SVG element
   const svg = d3
-    .select(element)
+    .select(container)
     .append('svg')
     .attr('width', width)
     .attr('height', height)
     .append('g')
     .attr('transform', `translate(${width / 2}, ${height / 2})`)
 
-  const color = d3.scaleOrdinal(d3.schemeCategory10)
+  const customColors = d3.scaleOrdinal(d3.schemeCategory10)
 
   const pie = d3
     .pie<PieDataItem>()
@@ -69,7 +99,7 @@ function drawPieChart(
   const arc = d3
     .arc<d3.PieArcDatum<PieDataItem>>()
     .innerRadius(0) // Use 0 for inner radius to create solid petals
-    .outerRadius((d) => radius * (d.data.value / d3.max(data, d => d.value)!)) // Scale outer radius based on value
+    .outerRadius((d) => radius * (d.data.value / d3.max(data, (d) => d.value)!)) // Scale outer radius based on value
 
   const arcs = svg
     .selectAll('.arc')
@@ -81,11 +111,19 @@ function drawPieChart(
   arcs
     .append('path')
     .attr('d', arc)
-    .attr('fill', (d, i) => color(i.toString()))
+    .attr('fill', (d, i) => customColors(i.toString()))
     .attr('class', 'arcs')
     .attr('data-value', (d) => d.value.toFixed(2))
     .on('mouseenter', (event, d) => {
       handleHoverThrottled(d.data.value)
+      if (tooltip?.open) {
+        const tooltipText = tooltip.text.replace('{y}', d.value.toFixed(2))
+        tooltipElement
+          .html(tooltipText)
+          .style('visibility', 'visible')
+          .style('top', `${event.pageY + 5}px`)
+          .style('left', `${event.pageX + 5}px`)
+      }
       svg
         .selectAll('path')
         .transition()
@@ -94,10 +132,31 @@ function drawPieChart(
           return this === event.currentTarget ? '1' : '0.618'
         })
     })
+    .on('mousemove', (event) => {
+      // 鼠标移动时，更新 tooltip 的位置
+      tooltipElement
+        .style('top', `${event.clientY + 5}px`) // 跟随鼠标垂直位置
+        .style('left', `${event.clientX + 5}px`) // 跟随鼠标水平位置
+    })
     .on('mouseleave', (event, d) => {
       handleLeave()
+      tooltipElement.style('visibility', 'hidden')
       svg.selectAll('path').transition().duration(150).style('opacity', '1')
     })
+
+  const tooltipElement = d3
+    .select(container)
+    .append('div')
+    .attr('class', 'tooltip')
+    .style('position', 'fixed')
+    .style('visibility', 'hidden')
+    .style('background', 'rgba(255, 255, 255, 0.8)') // 白色背景，透明度 80%
+    .style('color', 'black') // 文字颜色为黑色
+    .style('padding', '5px')
+    .style('border-radius', '5px')
+    .style('font-size', '12px')
+    .style('pointer-events', 'none') // 防止 tooltip 阻挡鼠标事件
+    .style('box-shadow', '0px 4px 8px rgba(0, 0, 0, 0.2)')
 
   arcs
     .append('text')
@@ -119,6 +178,30 @@ interface PieProps {
   interactionType: string
   interactionKey: string
   allowedinteractionType: string
+  groupBy: string | null
+  transform?: {
+    type: string
+    config: {
+      dimension: string
+      condition: string
+      value?: number
+    }
+  }
+  xAxis?: {
+    label?: string // x轴名称
+    format?: string // x轴坐标格式化函数
+    angle?: number // x轴标签旋转角度
+    tickSize?: number // x轴刻度线大小
+  }
+  yAxis?: {
+    label?: string // y轴名称
+    format?: string // y轴坐标格式化函数
+    angle?: number // y轴标签旋转角度
+    tickSize?: number // y轴刻度线大小
+  }
+  legend?: { open: boolean; legendPosition: string; legendOrientation: string }
+  tooltip?: { open: boolean; text: string }
+  color?: string[]
 }
 
 const Pie: React.FC<PieProps> = ({
@@ -132,6 +215,13 @@ const Pie: React.FC<PieProps> = ({
   interactionType,
   interactionKey,
   allowedinteractionType,
+  groupBy = null,
+  transform,
+  xAxis,
+  yAxis,
+  legend,
+  tooltip,
+  color,
 }) => {
   const chartRef = useRef<HTMLDivElement>(null)
   const curMessage: messageType = useSelector(
@@ -139,21 +229,25 @@ const Pie: React.FC<PieProps> = ({
   )
   const dispatch = useDispatch()
 
-  function preprocessData() {
-    return data.map((item) => {
-      return { label: item[x].toString() as string, value: item[y] as number }
-    })
-  }
+  const transformedData = applyTransformations(data, transform)
+  const processedData = preprocessData(transformedData, x, y, groupBy)
   useEffect(() => {
     if (chartRef.current) {
       let curInteractionKey = interactionKey === x ? 'label' : 'value'
       drawPieChart(
-        preprocessData(),
+        processedData,
         chartRef.current,
         dispatch,
         interactionType,
         interactionKey,
-        curInteractionKey
+        curInteractionKey,
+        x,
+        y,
+        xAxis,
+        yAxis,
+        legend,
+        tooltip,
+        color
       )
     }
   }, [data]) // Dependency array: Redraw chart if 'data' changes
@@ -242,6 +336,13 @@ const NightingaleWithWrapper: React.FC<figWrapperProps & PieProps> = ({
   interactionKey,
   allowedinteractionType,
   // allowedinteractionKey
+  groupBy = null,
+  transform,
+  xAxis,
+  yAxis,
+  legend,
+  tooltip,
+  color,
 }) => {
   // Calculate new width and height
   const newWidth = `100%`
@@ -270,6 +371,14 @@ const NightingaleWithWrapper: React.FC<figWrapperProps & PieProps> = ({
         interactionKey={interactionKey}
         allowedinteractionType={allowedinteractionType}
         // allowedinteractionKey={allowedinteractionKey}
+        groupBy={groupBy}
+        // 1
+        transform={transform}
+        xAxis={xAxis}
+        yAxis={yAxis}
+        legend={legend}
+        tooltip={tooltip}
+        color={color}
       />
     </WrapperWithButton>
   )

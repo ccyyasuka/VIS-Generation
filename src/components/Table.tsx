@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { Table } from 'antd'
 import { useDispatch, useSelector } from 'react-redux'
+import style from './table.module.css'
 interface OriginalDataItem {
   [key: string]: any
 }
@@ -44,5 +45,7 @@ export const TableView = () => {
     )
   }
 
-  return <></>
+  return <>
+  <div className={style.head}>数据视图1</div>
+  </>
 }

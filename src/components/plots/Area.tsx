@@ -19,9 +19,17 @@ function drawAreaChart(
   interactionType?: string
 ): void {
   const handleHover = (message: number) => {
+    let formattedMessage: string | number = message
+
+    if (typeof message === 'number') {
+      // 如果 message 是数字，则格式化为保留两位小数的字符串
+      formattedMessage = message.toFixed(2)
+    }
+    // 如果 message 是字符串，则保持不变
+
     const highlightMessage: messageType = {
       hoverOrNot: true,
-      message: parseFloat(message.toFixed(2)),
+      message: formattedMessage,
       interactionType: interactionType || 'default',
     }
 

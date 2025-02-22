@@ -28,7 +28,7 @@ export interface DataState {
   dataPath: string
   loading: boolean
   error: string | null
-  chatContent: { role: string; summary: string }[]
+  chatContent: { role: string; summary: string;recommendation?:string[] }[]
   selectedData: any
   config: configState[]
 }
@@ -49,23 +49,29 @@ const initialState: DataState = {
   selectedData: null,
   config: [],
 }
-function updateGraphsMeta(graph_layout:configState[], graphsGrammar:configState[]) {
+function updateGraphsMeta(
+  graph_layout: configState[],
+  graphsGrammar: configState[]
+) {
   // 创建一个Map，键为id，值为对应的meta对象，以便快速查找
-  const layoutMetaMap = new Map(graph_layout.map(item => [item.id, item.meta]));
+  const layoutMetaMap = new Map(
+    graph_layout.map((item) => [item.id, item.meta])
+  )
 
   // 遍历graphsGrammar数组，更新每个对象的meta属性
-  graphsGrammar.forEach(item => {
-    const metaToUpdate = layoutMetaMap.get(item.id);
-    if (metaToUpdate !== undefined) {  // 确保找到了对应的meta
-        item.meta = metaToUpdate;
+  graphsGrammar.forEach((item) => {
+    const metaToUpdate = layoutMetaMap.get(item.id)
+    if (metaToUpdate !== undefined) {
+      // 确保找到了对应的meta
+      item.meta = metaToUpdate
     } else {
-        console.warn(`No matching meta found for id ${item.id}.`);
-        // 这里可以根据需要选择是否给item.meta赋一个默认值
-        // item.meta = { width: '0', height: '0', left: '0', top: '0' }; // 示例默认值
+      console.warn(`No matching meta found for id ${item.id}.`)
+      // 这里可以根据需要选择是否给item.meta赋一个默认值
+      // item.meta = { width: '0', height: '0', left: '0', top: '0' }; // 示例默认值
     }
-  });
+  })
 
-  return graphsGrammar; // 返回更新后的graphsGrammar数组
+  return graphsGrammar // 返回更新后的graphsGrammar数组
 }
 // Action Type
 const UPDATE_KV = 'data/updateKV'
@@ -122,7 +128,7 @@ export const uploadFileAndSetData = (
     dispatch(
       updateKV({
         originData: originData,
-        dataPath:filePath
+        dataPath: filePath,
       })
     )
 
@@ -135,23 +141,22 @@ export const uploadFileAndSetData = (
     }
 
     const data = await response.json()
-    debugger
     const {
       graph_data: graphDatastr,
       reply: reply,
       graphs_grammar: graphsGrammarstr,
-      recommendation:recommendation,
-      graph_layout:graphLayout
+      recommendation: recommendation,
+      graph_layout: graphLayout,
     } = data
-    let graphData=JSON.parse(graphDatastr)
-    let graphsGrammar=graphsGrammarstr
+    let graphData = JSON.parse(graphDatastr)
+    let graphsGrammar = graphsGrammarstr
     graphsGrammar = graphsGrammar.map((item: any) => {
       item.data = graphData
       return item
     })
 
-    graphsGrammar = updateGraphsMeta(graphLayout,graphsGrammar)
-    
+    graphsGrammar = updateGraphsMeta(graphLayout, graphsGrammar)
+
     dispatch(
       updateKV({
         loading: false,
@@ -271,6 +276,7 @@ export const sendChatMessage = (inputValue: string) => {
       const reservedGraph = config.map((item) => {
         return { id: item.id, description: item.description }
       })
+      chatContent[chatContent.length-1].recommendation=[]
       const newChat = { role: 'user', summary: inputValue }
       dispatch(
         updateKV({
@@ -298,17 +304,17 @@ export const sendChatMessage = (inputValue: string) => {
         graph_data: graphDatastr,
         reply: reply,
         graphs_grammar: graphsGrammarstr,
-        recommendation:recommendation,
-        graph_layout:graphLayout
+        recommendation: recommendation,
+        graph_layout: graphLayout,
       } = data
-      let graphData=JSON.parse(graphDatastr)
-      let graphsGrammar=graphsGrammarstr
+      let graphData = JSON.parse(graphDatastr)
+      let graphsGrammar = graphsGrammarstr
       graphsGrammar = graphsGrammar.map((item: any) => {
         item.data = graphData
         return item
       })
-      graphsGrammar = updateGraphsMeta(graphLayout,graphsGrammar)
-      
+      graphsGrammar = updateGraphsMeta(graphLayout, graphsGrammar)
+
       dispatch(
         updateKV({
           loading: false,
