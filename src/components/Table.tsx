@@ -40,12 +40,15 @@ export const TableView = () => {
     const { dataSource, columns } = transformData(originData)
     return (
       <>
+        <div className={style.head}>Data Table</div>
         <Table dataSource={dataSource} columns={columns} />;
       </>
     )
   }
 
-  return <>
-  <div className={style.head}>数据视图1</div>
-  </>
+  return (
+    <>
+      <div className={style.head}>Data Table</div>
+    </>
+  )
 }

@@ -33,7 +33,6 @@ const WrapperWithButton: React.FC<WrapperWithButtonProps> = ({
   const TopRef = useRef('')
   // 计算基于百分比的实际像素值
   const getPositionInPixels = () => {
-    // debugger
     const offsetLeftFloat = parseInt(offsetLeft, 10) // 将 '15px' 转换为 15
     const offsetTopFloat = parseInt(offsetTop, 10)
     return { offsetLeftFloat, offsetTopFloat }
@@ -43,18 +42,14 @@ const WrapperWithButton: React.FC<WrapperWithButtonProps> = ({
 
   // 开始拖拽
   const handleMouseDown = (e: React.MouseEvent) => {
-    // debugger
     setIsDragging(true)
     e.preventDefault()
   }
 
   // 拖拽中
   const handleMouseMove = (e: MouseEvent) => {
-    // debugger
     e.preventDefault()
-    console.log('isDragging', isDragging)
     if (isDragging) {
-      // debugger
       const newLeft = e.clientX - offsetLeftFloat
       const newTop = e.clientY - offsetTopFloat
       // 更新位置
@@ -65,17 +60,14 @@ const WrapperWithButton: React.FC<WrapperWithButtonProps> = ({
       LeftRef.current = `${newLeft}px`
       TopRef.current = `${newTop}px`
     }
-    console.log('LeftRefLeftRefLeftRef', LeftRef.current, TopRef.current)
   }
 
   // 拖拽结束
   const handleMouseUp = (e: MouseEvent) => {
-    // debugger
     e.preventDefault()
     setIsDragging(false)
     const newLeft = parseFloat(position.left)
     const newTop = parseFloat(position.top)
-    console.log('LeftRefLeftRefLeftRef', LeftRef.current, TopRef.current)
     // 调用 Redux action 更新位置
     dispatch(updateConfigPosition(id, LeftRef.current, TopRef.current))
   }
@@ -203,7 +195,7 @@ const WrapperWithButton: React.FC<WrapperWithButtonProps> = ({
           borderRadius: '3px',
           cursor: 'pointer',
         }}>
-        Close
+        delete
       </button> */}
     </div>
   )

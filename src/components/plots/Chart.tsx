@@ -16,9 +16,11 @@ type ConfigItem = {
     left: string
     top: string
   }
+  description: string
   interactionType: string
   interactionKey: string
-  allowedinteractionType: string
+  allowedInteractionType: string
+  title: string
   transform?: {
     type: string
     config: {
@@ -88,6 +90,7 @@ const Chart: React.FC<ChartProps> = ({ item, left, top }) => {
       id={item.id}
       data={item.data}
       groupBy={item.legendBy}
+      title={item.title}
       width={item.meta.width}
       height={item.meta.height}
       left={item.meta.left}
@@ -99,7 +102,7 @@ const Chart: React.FC<ChartProps> = ({ item, left, top }) => {
       z={item.z}
       interactionType={item.interactionType}
       interactionKey={item.interactionKey}
-      allowedinteractionType={item.allowedinteractionType}
+      allowedInteractionType={item.allowedInteractionType}
       transform={item.transform}
       xAxis={item.xAxis}
       yAxis={item.yAxis}

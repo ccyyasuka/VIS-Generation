@@ -4,6 +4,7 @@ Statistical charts have the grammar as follows in the visualization chart librar
 Statistical charts:
 {{
 "name": "chart_type",
+"title":"chart title(No more than six words)"
 "description":"Description of the view, for example: the relationship of sales volume changing over time, which is a line chart",
 "meta": {{
 "width": "Chart width relative to the main interface as a percentage",
@@ -17,13 +18,30 @@ Statistical charts:
 "interactionType": "ID of interactive signal, for example filter_01",
 "interactionKey": "Data column corresponding to the interactive signal. This data column must be in x or y",
 "allowedInteractionType": "IDs of acceptable interactive signals. When there is an interactive signal, there must be acceptable interactive signals."
+
+legandBy: "Data column names that group data ", // The basis for legend grouping
+transform: {{
+type: "Data conversion mode, including filter and groupBy", // Data conversion mode (such as filtering or grouping by condition)
+config: {{
+dimension: 'For which data column to convert ', // Converted dimension data column
+condition: 'Includes the condition of the <,>,=,asc,desc,sum,avg,count', // transformations, including various operators and aggregation methods
+value: number // Standard value of data conversion. For example, value is not required when sum is used. Value can be specified when avg is used
 }},
-chart_type includes 'Scatter' (scatter plot), 'ArcDiagram' (arc diagram), 'Donat' (donut chart), 'Line' (line chart), 'BarRight' (horizontal bar chart), 'BarVertical' (vertical bar chart).
+}}
+tooltip: {{
+open: true, // Whether to enable the prompt box
+text: "The weight of {{x}} is {{y}}" // The message displayed when the mouse is hovering can be filled with dynamic data. This can only be {{x}} or {{y}}
+}}
+
+
+}},
+chart_type includes 'Scatter' (scatter plot), 'Donat' (donut chart), 'Line' (line chart), 'BarRight' (horizontal bar chart), 'BarVertical' (vertical bar chart).
 The following is an example output:
 {{
 "graphs_grammar": [
 {{
-"name": "ArcDiagram",
+"name": "BarVertical",
+"title":"Product sales bar chart"
 "description":"The relationship of sales volume changing over time, which is a line chart",
 "meta": {{
 "width": "60%",
@@ -65,7 +83,6 @@ When a user provides data for you to analyze, you should always maintain a metho
 """
 
 
-
 # tag
 error_corrector_prompt_raw = """
 Your final output needs to serve as the input for a data interface, hence it must strictly follow the structure below:
@@ -83,6 +100,7 @@ The user-input graph grammar is:
 "graphs_grammar": [
 {{
 "name": "BarVertical",
+"title":"Product sales bar chart"
 "description":"Introduction to the view, e.g., relationship between sales volume and time, is a line chart",
 "width": "45%",
 "height": "40%",
@@ -188,12 +206,17 @@ An insight found in the data is:
 {cur_insight}
 """
 
-# tag
+# tag 数据统计与挖掘
 data_constructor_prompt_raw = """
 
 Task Brief
 You are an autonomous data analysis engine, designed to perform professional-level data operations.
-You have access to several tools aimed at facilitating data analysis on pandas DataFrames. Here's a brief introduction to each tool and how to use them:
+You have access to several tools aimed at facilitating data analysis on pandas DataFrames.
+
+Your data insight must be based on data results, and your data insight must include data support, such as:
+The Pearson correlation coefficient between sales volume and temperature is 0.94, so there is a significant positive correlation between sales volume and temperature.
+
+Here's a brief introduction to each tool and how to use them:
 
 get_column_names：This function retrieves all column names in the specified DataFrame ('initial' for the original DataFrame or 'processing' for the intermediate DataFrame). It helps you understand what data is available for analysis.
 Parameters: analysis_type (str) indicating which DataFrame to use.
@@ -212,6 +235,9 @@ You must call the tools to gain insights!!
 You must call the tool to get the answer, do not return the result without calling the tool!!
 You must call the tool to get the answer, do not return the result without calling the tool!!
 You must call the tool to get the answer, do not return the result without calling the tool!!
+
+The Pearson correlation coefficient between sales volume and temperature is 0.94, so there is a significant positive correlation between sales volume and temperature.
+
 The user's question is:
 {user_question}
 The first ten rows of the original data provided by the user are:
@@ -240,7 +266,7 @@ The grammar for drawing visualization charts at this moment is:
 {cur_graph_grammar}
 """
 
-# tag
+# tag 最终生成
 primary_assistant_prompt_raw = """
 You are a dedicated assistant for data analysis.
 The user's instructions are {user_question}
@@ -255,7 +281,7 @@ Please note that during data analysis and chart drawing, you must rely on the in
 Please note that you should follow the relevant design principles associated with visualization grammar, and if you are not familiar with these principles, you should refer to them.
 When you finish data analysis and decide to enter the replan phase, your output format should be:
 {{
-"reply": "string" // Data analysis summary not exceeding 50 characters.
+"reply": "string" // Data insight summary 
 "graphs_grammar?": "list" // The formal language used by visualization chart libraries to draw charts.
 "recommendation": "string[]" // A list of next interaction options, up to three options, including an "End Exploration" option.
 }}
@@ -264,6 +290,7 @@ The syntax for statistical charts in the visualization chart library is as follo
 Statistical Charts:
 {{
 "name": "chart_type",
+"title":"Product price bar chart"
 "description":"Introduction to the view, e.g., relationship between sales volume and time, is a line chart"
 "meta": {{
 "width": "Chart width as a percentage of the main interface",
@@ -277,13 +304,28 @@ Statistical Charts:
 "interactionType": "ID of the interaction signal, e.g., filter_01",
 "interactionKey": "Data column corresponding to the interaction signal. This data column must be in x or y",
 "allowedInteractionType": "ID of acceptable interaction signals. When there is an interaction signal, there must be an acceptable interaction signal."
+
+legandBy: "Data column names that group data ", // The basis for legend grouping
+transform: {{
+type: "Data conversion mode, including filter and groupBy", // Data conversion mode (such as filtering or grouping by condition)
+config: {{
+dimension: 'For which data column to convert ', // Converted dimension data column
+condition: 'Includes the condition of the <,>,=,asc,desc,sum,avg,count', // transformations, including various operators and aggregation methods
+value: number // Standard value of data conversion. For example, value is not required when sum is used. Value can be specified when avg is used
 }},
-chart_type includes 'Scatter' (scatter plot), 'ArcDiagram' (arc diagram), 'Donat' (donut chart), 'Line' (line chart), 'BarRight' (horizontal bar chart), 'BarVertical' (vertical bar chart).
+}}
+tooltip: {{
+open: true, // Whether to enable the prompt box
+text: "The weight of {{x}} is {{y}}" // The message displayed when the mouse is hovering can be filled with dynamic data. This can only be {{x}} or {{y}}
+}}
+
+}},
+chart_type includes 'Scatter' (scatter plot), 'Line' (line chart), 'BarRight' (horizontal bar chart), 'BarVertical' (vertical bar chart).Do not generate other chart_type.
 Here is an example output:
 {{
 "graphs_grammar": [
 {{
-"name": "ArcDiagram",
+"name": "BarVertical",
 "meta": {{
 "width": "60%",
 "height": "60%",
@@ -307,10 +349,20 @@ Here is an example output:
 "interactionType": "filter_02",
 "interactionKey": "height",
 "allowedInteractionType": "filter_01"
+legandBy: "label"
+transform: {{
+    type: "filter",
+    config: {{
+    dimension: 'height',
+    condition: '<',
+    value: 180,
+    }},
+}},
+ tooltip: {{ open: true, text: 'The weight of {{y}} is {{x}}' }}
 }}
 ]
 }}
-
+If you have multiple views, you should make them interlinked.
 Please note that your final output needs to serve as input for a data interface, therefore your final output must strictly adhere to the following format:
 {{
 "reply": "string", // Any message you wish to convey, unrelated to graphs_grammar and recommendation.
@@ -478,7 +530,7 @@ Please adhere to the following guidelines to achieve optimal performance:
 
 Initial Data Transformation: Initially, direct the ["data_transform"] team to process the provided initial dataset. This step is crucial for preparing the data for visualization.
 Sequential Processing: Upon successful data transformation, proceed to call upon the ["graph_grammar"] team to start generating visualization grammars. Remember, this step can only be initiated after a successful data transformation phase.
-Iterative Refinement: Depending on the complexity of the data and the desired outcomes, multiple iterations of data transformation and visualization grammar generation may be required. Use your judgment to determine when further refinement is needed or when satisfactory results have been achieved.
+You should only focus on generating visualization grammars after data processing, and do not process data again.
 Quality Assurance: Throughout the process, ensure that the outputs from both teams meet the necessary standards of accuracy, clarity, and practicality in visual representation.
 Final Review: Once you believe sufficient visualizations have been generated, conduct a final review of all outputs to confirm their appropriateness and alignment with project goals.
 Your role is critical in efficiently coordinating these processes to ensure that the final visualizations are both information-rich and insightful. Manage the ["data_transform"] and ["graph_grammar"] teams accordingly to achieve these objectives.
@@ -487,6 +539,7 @@ The grammar for statistical charts in the visualization chart library is as foll
 Statistical Charts:
 {{
 "name": "chart_type",
+"title":"chart title(no more than 6 words)"
 "description":"Introduction to the view, e.g., relationship between sales volume and time, is a line chart",
 "meta": {{
 "width": "The percentage of width of the chart relative to the main interface",
@@ -500,13 +553,23 @@ Statistical Charts:
 "interactionType": "The ID of the interaction signal, such as filter_01",
 "interactionKey": "The corresponding data column of the interaction signal. This data column must be in x or y",
 "allowedInteractionType": "The ID of an acceptable interaction signal, where there is an interaction signal, there must be an acceptable interaction signal."
+"transform": {{
+"type": "Data conversion mode, including filter and groupBy", // Data conversion mode (such as filtering or grouping by condition)
+config: {{
+"dimension": 'For which data column to convert ', // Converted dimension data column
+"condition": 'Includes the condition of the <,>,=,asc,desc,sum,avg,count', // transformations, including various operators and aggregation methods
+"value": number // Standard value of data conversion. For example, value is not required when sum is used. Value can be specified when avg is used
 }},
-chart_type includes 'Scatter' (scatter plot), 'ArcDiagram' (arc diagram), 'Donat' (donut chart), 'Line' (line chart), 'BarRight' (horizontal bar chart), 'BarVertical' (vertical bar chart).
+}}
+}},
+chart_type includes 'Scatter' (scatter plot), 'Pie' (Pie diagram), 'Donat' (donut chart), 'Line' (line chart), 'BarRight' (horizontal bar chart), 'BarVertical' (vertical bar chart).
 Here is an example output:
 {{
 "graphs_grammar": [
 {{
-"name": "ArcDiagram",
+"name": "Scatter",
+"title":"Product sales Scatter chart"
+"description":"relationship between sales volume and time, is a line chart",
 "meta": {{
 "width": "60%",
 "height": "60%",
@@ -516,6 +579,14 @@ Here is an example output:
 "interactionType": "filter_01",
 "interactionKey": "height",
 "allowedInteractionType": "filter_02"
+transform: {{
+    type: "filter",
+    config: {{
+    dimension: 'height',
+    condition: '<',
+    value: 180,
+    }},
+}},
 }},
 {{
 "name": "BarRight",
@@ -530,6 +601,14 @@ Here is an example output:
 "interactionType": "filter_02",
 "interactionKey": "height",
 "allowedInteractionType": "filter_01"
+transform: {{
+    type: "filter",
+    config: {{
+    dimension: 'height',
+    condition: '<',
+    value: 180,
+    }},
+}},s
 }}
 ]
 }}
@@ -548,7 +627,9 @@ The task can only be completed when the intermediate results of data transformat
 
 # tag
 graph_filter_prompt_raw = """
-You are a designer of a data visualization analysis system. Users have created several views in the past, and they have provided you with detailed descriptions and view IDs for each. Please consider the user's question and return which views need to be retained in the current visualization analysis system. If all current views are relatively useful, you may retain all views. If the current views are [], then simply return [].
+You are a designer of a data visualization analysis system. Users have created several views in the past, and they have provided you with detailed descriptions and view IDs for each. Please consider the user's question and return which views need to be retained in the current visualization analysis system. If all current views are relatively useful, you may retain all views. If the current views are [], then you must simply return [].
+If the current total number of views is less than 4, keep all the views; if the current total number of views is more than 4, delete the views to only two.
+
 For example, if the current views are:
 [
 {{
@@ -569,8 +650,14 @@ Return:
 
 For example, if the current views are:
 []
-Return:
+You Must Return:
 []
+
+
+An example of a mistake is if the current views are:
+[]
+You must not Return:
+['Scatter Plots', 'Bar Charts', 'Line Graphs', 'Heatmaps']
 
 The user's question is:
 {user_question}
@@ -606,7 +693,7 @@ description:"...",
 ...
 ]
 
-Note that when there is only one view, consider setting meta to:
+Note that when there is only one view, setting meta to:
 "meta":{{
 "width": "95%",
 "height": "95%",
@@ -614,7 +701,7 @@ Note that when there is only one view, consider setting meta to:
 "top": "2%"
 }}
 ;
-When there are two views, consider setting meta to:
+When there are two views, setting meta to:
 "meta":{{
 "width": "100%",
 "height": "50%",
@@ -629,7 +716,7 @@ When there are two views, consider setting meta to:
 }}
 ;
 
-When there are three views, consider setting meta to:
+When there are three views, setting meta to:
 "meta":{{
 "width": "100%",
 "height": "50%",
@@ -672,7 +759,7 @@ and
 "top": "50%"
 }}
 
-When there are four views, consider setting meta to:
+When there are four views, setting meta to:
 "meta":{{
 "width": "50%",
 "height": "50%",

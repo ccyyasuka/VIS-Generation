@@ -144,7 +144,7 @@ interface AreaProps {
   y: string
   interactionKey: string
   interactionType: string
-  allowedinteractionType: string
+  allowedInteractionType: string
 }
 
 const Area: React.FC<AreaProps> = ({
@@ -154,7 +154,7 @@ const Area: React.FC<AreaProps> = ({
   left,
   top,
   interactionType,
-  allowedinteractionType,
+  allowedInteractionType,
 }) => {
   const dispatch = useDispatch()
   const curMessage: messageType = useSelector(
@@ -172,11 +172,11 @@ const Area: React.FC<AreaProps> = ({
     if (curMessage === undefined) {
       return
     }
-    if (!allowedinteractionType) {
+    if (!allowedInteractionType) {
       return
     }
 
-    if (curMessage.interactionType === allowedinteractionType) {
+    if (curMessage.interactionType === allowedInteractionType) {
       d3.select(chartRef.current).selectAll('.dots').style('opacity', 0.3)
       d3.select(chartRef.current)
         .selectAll('.dots')
@@ -230,7 +230,7 @@ const AreaWithWrapper: React.FC<figWrapperProps & AreaProps> = ({
   id,
   interactionType,
   interactionKey,
-  allowedinteractionType,
+  allowedInteractionType,
   // allowedinteractionKey
 }) => {
   // Calculate new width and height
@@ -258,7 +258,7 @@ const AreaWithWrapper: React.FC<figWrapperProps & AreaProps> = ({
         y={y}
         interactionType={interactionType}
         interactionKey={interactionKey}
-        allowedinteractionType={allowedinteractionType}
+        allowedInteractionType={allowedInteractionType}
         // allowedinteractionKey={allowedinteractionKey}
       />
     </WrapperWithButton>

@@ -1,59 +1,64 @@
 import * as d3 from 'd3'
-import React, { useRef, useEffect, useState, ReactNode } from 'react'
+import React, { useRef, useEffect } from 'react'
 import { messageType } from '../../types'
 import { useDispatch, useSelector } from 'react-redux'
 import { ChangeMessageSetting } from './redux/action/action'
-import _, { transform } from 'lodash'
+import _ from 'lodash'
 import { AppState, ReduxProviderWrapper } from './redux/store'
 import WrapperWithButton, { figWrapperProps } from '../wrapperButton'
 import applyTransformations from './tools/transformApply'
 import preprocessData from './tools/preprocess'
-// 1
+import calculateMargin from './tools/calMargin'
+
+// 数据类型定义
 type BarDataItem = {
-  // qqqq
   label: string
   value: number
   groupBy: string | null
   [key: string]: any
 }
+
+// 默认配置
 const legendAcquiesce = {
   open: true,
-  legendPosition: 'top-left',
+  legendPosition: 'top-right',
   legendOrientation: 'vertical',
 }
+
 const xAxisAcquiesce = {
-  xAxisLabel: '', // x轴名称
-  // format: string // x轴坐标格式化函数
-  angle: 0, // x轴标签旋转角度
-  tickSize: 6, // x轴刻度线大小
+  xAxisLabel: '',
+  angle: 0,
+  tickSize: 6,
 }
+
 const yAxisAcquiesce = {
-  yAxisLabel: '', // x轴名称
-  // format: string // x轴坐标格式化函数
-  angle: 0, // x轴标签旋转角度
-  tickSize: 6, // x轴刻度线大小
+  yAxisLabel: '',
+  angle: 0,
+  tickSize: 6,
 }
-// 1
+
+// 绘制柱状图函数
 function drawBarChart(
   data: BarDataItem[],
   element: HTMLSpanElement,
   dispatch: any,
   interactionType: string,
-  interactionkey: string,
+  interactionKey: string,
   curInteractionKey: string,
   xx: string,
   yy: string,
+  title: string,
   xAxis: {
-    xAxisLabel?: string // x轴名称
-    format?: string // x轴坐标格式化函数
-    angle?: number // x轴标签旋转角度
-    tickSize?: number // x轴刻度线大小
+    xAxisLabel?: string
+    format?: string
+    angle?: number
+    tickSize?: number
   } = xAxisAcquiesce,
   yAxis: {
-    yAxisLabel?: string // y轴名称
-    format?: string // y轴坐标格式化函数
-    angle?: number // y轴标签旋转角度
-    tickSize?: number // y轴刻度线大小
+    yAxisLabel?: string
+    format?: string
+    angle?: number
+    tickSize?: number
   } = yAxisAcquiesce,
   legend: {
     open: boolean
@@ -63,33 +68,25 @@ function drawBarChart(
   tooltip?: { open: boolean; text: string },
   color?: string[]
 ): void {
-  // ...保持原有的 handleHover 和 handleLeave 函数不变...
-  const handleHover = (message: number) => {
-    let formattedMessage: string | number = message;
-
-  if (typeof message === 'number') {
-    // 如果 message 是数字，则格式化为保留两位小数的字符串
-    formattedMessage = message.toFixed(2);
+  // 处理鼠标悬停事件
+  const handleHover = (message: number | string) => {
+    const formattedMessage =
+      typeof message === 'number' ? message.toFixed(2) : message
+    const highlightMessage: messageType = {
+      hoverOrNot: true,
+      message: formattedMessage,
+      interactionType: interactionType || 'default',
+      interactionKey: interactionKey || 'default',
+    }
+    dispatch(ChangeMessageSetting(highlightMessage))
   }
-  // 如果 message 是字符串，则保持不变
 
-  const highlightMessage: messageType = {
-    hoverOrNot: true,
-    message: formattedMessage,
-    interactionType: interactionType || 'default',
-    interactionKey: interactionkey || 'default',
-  };
-    dispatch(
-      ChangeMessageSetting({
-        ...highlightMessage,
-      })
-    )
-  }
   const handleHoverThrottled = _.throttle(handleHover, 200)
 
   const handleLeave = () => {
     dispatch(ChangeMessageSetting({ message: '', hoverOrNot: false }))
   }
+
   if (!element)
     element = document.body.appendChild(document.createElement('span'))
   else while (element.firstChild) element.removeChild(element.firstChild)
@@ -97,7 +94,10 @@ function drawBarChart(
   const container = element
   const width = container.clientWidth
   const height = container.clientHeight
-  const margin = { top: 30, right: 30, bottom: 40, left: 60 }
+  const margin = calculateMargin(
+    legend?.legendPosition,
+    legend?.legendOrientation
+  )
 
   const svg = d3
     .select(container)
@@ -112,53 +112,79 @@ function drawBarChart(
   const innerWidth = width - margin.left - margin.right
   const innerHeight = height - margin.top - margin.bottom
 
-  // 新增分组逻辑
   const groups = Array.from(new Set(data.map((d) => d.groupBy))).filter(
     Boolean
   ) as string[]
   const labels = Array.from(new Set(data.map((d) => d.label)))
 
-  // 创建嵌套比例尺
   const x0 = d3
     .scaleBand()
     .domain(labels)
     .range([0, innerWidth])
-    .paddingInner(0.1)
+    .paddingInner(0.05)
 
   const x1 = d3
     .scaleBand()
     .domain(groups)
     .range([0, x0.bandwidth()])
-    .padding(0.05)
+    .padding(0.01)
 
   const y = d3
     .scaleLinear()
     .domain([0, d3.max(data, (d) => d.value) as number])
     .range([innerHeight, 0])
 
-  // 颜色比例尺
-  // 1
   const customColors = d3
     .scaleOrdinal<string>()
     .domain(groups)
     .range(color || d3.schemeCategory10)
 
   // 绘制柱子
+
   chart
     .selectAll('.bar-group')
     .data(data)
     .enter()
     .append('rect')
     .attr('class', 'bar-group')
-    .attr('x', (d) => x0(d.label)! + x1(d.groupBy!)!)
+    .attr('x', (d) => {
+      // 先进行类型判断，确保 d.label 和 d.groupBy 存在
+      if (d.label) {
+        if (d.groupBy === null) {
+          // 当 groupBy 为 null 时，柱子在 x0 上定位
+          return x0(d.label)!
+        } else {
+          // 当 groupBy 不为 null 时，柱子在 x0 和 x1 上定位
+          return x0(d.label)! + (d.groupBy ? x1(d.groupBy)! : 0) // 如果 groupBy 为 null，给它一个 0 值
+        }
+      }
+      return 0 // 防止 undefined 错误，返回一个默认位置
+    })
     .attr('y', (d) => y(d.value))
-    .attr('width', x1.bandwidth())
+    .attr('width', (d) => (d.groupBy ? x1.bandwidth() : x0.bandwidth()))
     .attr('height', (d) => innerHeight - y(d.value))
     .attr('fill', (d) => customColors(d.groupBy!))
     .attr('data-value', (d) => d.value.toFixed(2))
     .attr('data-label', (d) => d.label)
     .on('mouseenter', (event, d) => {
+      const currentBar = d3.select(event.currentTarget)
+      currentBar.transition().style('opacity', 1)
+      d3.select(event.currentTarget.parentNode)
+        .selectAll('.bar-group')
+        .filter((node) => node !== d)
+        .transition()
+        .style('opacity', 0.6)
+      // 传递完整的交互信息
       handleHoverThrottled(d[curInteractionKey])
+      // 添加当前图表的信息到消息中
+      const highlightMessage: messageType = {
+        hoverOrNot: true,
+        message: d[curInteractionKey],
+        interactionType: interactionType,
+        interactionKey: interactionKey, // 使用组件prop中的interactionKey
+      }
+      dispatch(ChangeMessageSetting(highlightMessage))
+
       if (tooltip?.open) {
         const tooltipText = tooltip.text
           .replace('{x}', d.label)
@@ -169,14 +195,8 @@ function drawBarChart(
           .style('top', `${event.pageY + 5}px`)
           .style('left', `${event.pageX + 5}px`)
       }
-      d3.select(event.currentTarget).transition().style('opacity', 1)
-      d3.selectAll('.bar-group')
-        .filter((n) => n !== d)
-        .transition()
-        .style('opacity', 0.6)
     })
-    .on('mousemove', (event) => {
-      // 鼠标移动时，更新 tooltip 的位置
+    .on('mousemove', (event, d) => {
       tooltipElement
         .style('top', `${event.clientY + 5}px`) // 跟随鼠标垂直位置
         .style('left', `${event.clientX + 5}px`) // 跟随鼠标水平位置
@@ -184,20 +204,43 @@ function drawBarChart(
     .on('mouseleave', () => {
       handleLeave()
       tooltipElement.style('visibility', 'hidden')
-      d3.selectAll('.bar-group').transition().style('opacity', 1)
     })
 
-  // 添加坐标轴
   // chart
-  //   .append('g')
-  //   .attr('transform', `translate(0,${innerHeight})`)
-  //   .call(d3.axisBottom(x0))
+  //   .selectAll('.bar-group')
+  //   .data(data)
+  //   .enter()
+  //   .append('rect')
+  //   .attr('class', 'bar-group')
+  //   .attr('x', (d) => (d.label ? (d.groupBy === null ? x0(d.label)! : x0(d.label)! + (d.groupBy ? x1(d.groupBy)! : 0)) : 0)
+  //   .attr('y', (d:BarDataItem) => y(d.value))
+  //   .attr('width', (d:BarDataItem) => (d.groupBy ? x1.bandwidth() : x0.bandwidth()))
+  //   .attr('height', (d:BarDataItem) => innerHeight - y(d.value))
+  //   .attr('fill', (d:BarDataItem) => customColors(d.groupBy!))
+  //   .attr('data-value', (d:BarDataItem) => d.value.toFixed(2))
+  //   .attr('data-label', (d:BarDataItem) => d.label)
+  //   .on('mouseenter', (event, d:BarDataItem) => {
+  //     handleHoverThrottled(d[curInteractionKey]);
+  //     if (tooltip?.open) {
+  //       const tooltipText = tooltip.text.replace('{x}', d.label).replace('{y}', d.value.toFixed(2));
+  //       tooltipElement
+  //         .html(tooltipText)
+  //         .style('visibility', 'visible')
+  //         .style('top', `${event.pageY + 5}px`)
+  //         .style('left', `${event.pageX + 5}px`);
+  //     }
+  //   })
+  //   .on('mousemove', (event, d) => {
+  //     tooltipElement
+  //       .style('top', `${event.clientY + 5}px`)
+  //       .style('left', `${event.clientX + 5}px`);
+  //   })
+  //   .on('mouseleave', () => {
+  //     handleLeave();
+  //     tooltipElement.style('visibility', 'hidden');
+  //   });
 
-  // chart.append('g').call(d3.axisLeft(y))
-
-  // 1
-  // ##############################################################################
-  // 添加图例（可选）
+  // 添加图例
   if (legend?.open) {
     const legendGroup = svg
       .append('g')
@@ -205,39 +248,35 @@ function drawBarChart(
       .attr('font-size', 10)
       .attr('text-anchor', 'start')
 
-    // 控制图例的定位
     let legendTransform = ''
     switch (legend.legendPosition) {
       case 'top-left':
-        legendTransform = `translate(5, 1)`
+        legendTransform = `translate(1, 1)`
         break
       case 'top-right':
-        legendTransform = `translate(${width - 150}, 1)`
+        legendTransform = `translate(${width - margin.right}, 1)`
         break
       case 'bottom-left':
-        legendTransform = `translate(20, ${height - 10})`
+        legendTransform = `translate(20, ${height - margin.top})`
         break
       case 'bottom-right':
-        legendTransform = `translate(${width - 100}, ${height - 10})`
+        legendTransform = `translate(20, ${height - margin.top})`
         break
       default:
-        legendTransform = `translate(${width - 150}, 2)`
+        legendTransform = `translate(${width - margin.right}, 1)`
     }
 
     legendGroup.attr('transform', legendTransform)
 
-    // 控制图例项的排列方式
     const legendItems = legendGroup
       .selectAll('g')
       .data(groups)
       .enter()
       .append('g')
-      .attr(
-        'transform',
-        (d, i) =>
-          legend.legendOrientation === 'vertical'
-            ? `translate(0, ${i * 20})` // 纵向排列
-            : `translate(${i * 40}, 0)` // 水平排列
+      .attr('transform', (d, i) =>
+        legend.legendOrientation === 'vertical'
+          ? `translate(0, ${i * 20})`
+          : `translate(${i * 40}, 0)`
       )
 
     legendItems
@@ -252,34 +291,34 @@ function drawBarChart(
       .attr('x', 12)
       .attr('y', 7.5)
       .attr('dy', '0.32em')
-      .text((d) => {
-        const text = d
-        // 如果文本超过10个字符，添加省略号
-        return text.length > 3 ? text.slice(0, 3) + '...' : text
-      })
+      .text((d) => (d.length > 7 ? d.slice(0, 7) + '...' : d))
   }
 
+  // 添加工具提示
   const tooltipElement = d3
     .select(container)
     .append('div')
     .attr('class', 'tooltip')
     .style('position', 'fixed')
     .style('visibility', 'hidden')
-    .style('background', 'rgba(255, 255, 255, 0.8)') // 白色背景，透明度 80%
-    .style('color', 'black') // 文字颜色为黑色
+    .style('background', 'rgba(255, 255, 255, 0.8)')
+    .style('color', 'black')
     .style('padding', '5px')
     .style('border-radius', '5px')
     .style('font-size', '12px')
-    .style('pointer-events', 'none') // 防止 tooltip 阻挡鼠标事件
+    .style('pointer-events', 'none')
     .style('box-shadow', '0px 4px 8px rgba(0, 0, 0, 0.2)')
 
   // 添加坐标轴
-  // x 轴
   if (xAxis) {
-    const xAxisFormat = xAxis.format || '{x}' // 默认格式 "{x}"
-    const xAxisLabel = xAxis.xAxisLabel || xx // 默认标签 'x'
+    const xAxisFormat = xAxis.format || '{x}'
+    const xAxisLabel = xAxis.xAxisLabel || xx
     const xAxisAngle = xAxis.angle || 0
     const xAxisTickSize = xAxis.tickSize || 6
+
+    const xValues = data.map((d) => d.label)
+    const temp = Math.floor(xValues.length / 3)
+    const selectedTicks = xValues.filter((d, i) => i % temp === 0)
 
     chart
       .append('g')
@@ -287,11 +326,8 @@ function drawBarChart(
       .call(
         d3
           .axisBottom(x0)
-          .ticks(5)
-          .tickFormat((d: any) => {
-            // 使用 {x} 格式化
-            return xAxisFormat.replace(/{x}/g, d)
-          })
+          .tickValues(selectedTicks)
+          .tickFormat((d) => xAxisFormat.replace(/{x}/g, d))
           .tickSize(xAxisTickSize)
       )
       .selectAll('text')
@@ -309,9 +345,8 @@ function drawBarChart(
   }
 
   if (yAxis) {
-    // y 轴
-    const yAxisFormat = yAxis.format || '{y}' // 默认格式 "{y}"
-    const yAxisLabel = yAxis.yAxisLabel || yy // 默认标签 'y'
+    const yAxisFormat = yAxis.format || '{y}'
+    const yAxisLabel = yAxis.yAxisLabel || yy
     const yAxisAngle = yAxis.angle || 0
     const yAxisTickSize = yAxis.tickSize || 6
 
@@ -321,10 +356,7 @@ function drawBarChart(
         d3
           .axisLeft(y)
           .ticks(5)
-          .tickFormat((d: any) => {
-            // 使用 {y} 格式化
-            return yAxisFormat.replace(/{y}/g, d)
-          })
+          .tickFormat((d: any) => yAxisFormat.replace(/{y}/g, d))
           .tickSize(yAxisTickSize)
       )
       .selectAll('text')
@@ -341,14 +373,26 @@ function drawBarChart(
       .text(yAxisLabel)
       .style('font-size', '14px')
   }
+
+  if (title) {
+    svg
+      .append('text')
+      .attr('x', width / 2)
+      .attr('y', margin.top / 2 - 4)
+      .attr('text-anchor', 'middle')
+      .style('font-size', '14px')
+      .text(title)
+  }
 }
 
-// 1
+// 组件属性定义
 type DataItem = {
   [key: string]: any
 }
+
 interface BarProps {
   data: DataItem[]
+  title: string
   width: string
   height: string
   left: string
@@ -357,8 +401,7 @@ interface BarProps {
   y: string
   interactionType: string
   interactionKey: string
-  allowedinteractionType: string
-  // allowedinteractionKey: string
+  allowedInteractionType: string
   groupBy: string | null
   transform?: {
     type: string
@@ -369,22 +412,23 @@ interface BarProps {
     }
   }
   xAxis?: {
-    label?: string // x轴名称
-    format?: string // x轴坐标格式化函数
-    angle?: number // x轴标签旋转角度
-    tickSize?: number // x轴刻度线大小
+    label?: string
+    format?: string
+    angle?: number
+    tickSize?: number
   }
   yAxis?: {
-    label?: string // y轴名称
-    format?: string // y轴坐标格式化函数
-    angle?: number // y轴标签旋转角度
-    tickSize?: number // y轴刻度线大小
+    label?: string
+    format?: string
+    angle?: number
+    tickSize?: number
   }
   legend?: { open: boolean; legendPosition: string; legendOrientation: string }
   tooltip?: { open: boolean; text: string }
   color?: string[]
 }
-// 1
+
+// Bar组件
 const Bar: React.FC<BarProps> = ({
   data,
   width,
@@ -395,7 +439,7 @@ const Bar: React.FC<BarProps> = ({
   y,
   interactionType,
   interactionKey,
-  allowedinteractionType,
+  allowedInteractionType,
   groupBy = null,
   transform,
   xAxis,
@@ -403,20 +447,20 @@ const Bar: React.FC<BarProps> = ({
   legend,
   tooltip,
   color,
+  title,
 }) => {
   const dispatch = useDispatch()
   const curMessage: messageType = useSelector(
     (state: AppState) => state.message
   )
   const chartRef = useRef<HTMLDivElement>(null)
-  // 1
+
   const transformedData = applyTransformations(data, transform)
   const processedData = preprocessData(transformedData, x, y, groupBy)
 
   useEffect(() => {
     if (chartRef.current) {
-      // 1
-      let curInteractionKey = interactionKey === x ? 'label' : 'value'
+      let curInteractionKey = interactionKey === y ? 'value' : 'label'
       drawBarChart(
         processedData,
         chartRef.current,
@@ -426,6 +470,7 @@ const Bar: React.FC<BarProps> = ({
         curInteractionKey,
         x,
         y,
+        title,
         xAxis,
         yAxis,
         legend,
@@ -433,50 +478,33 @@ const Bar: React.FC<BarProps> = ({
         color
       )
     }
-  }, [data]) // Dependency array: Redraw chart if 'data' changes
-  // 处理接收信息
-  React.useEffect(() => {
-    // qqqq
-    console.log('接收到了信息', curMessage)
-    console.log(curMessage.interactionType, curMessage.interactionKey)
-    if (curMessage === undefined) {
-      return
-    }
-    if (!allowedinteractionType) {
-      return
-    }
-    if (curMessage.interactionKey !== undefined) {
-      if (
-        !data.length ||
-        !Object.keys(data[0]).includes(curMessage.interactionKey)
-      ) {
-        return
-      }
-    }
+  }, [data])
 
-    if (curMessage.interactionType === allowedinteractionType) {
-      // qqqq
-      d3.select(chartRef.current).selectAll('.bars').style('opacity', 0.3)
-      // 然后找到与message相等的点，将其透明度设置为1
-      d3.select(chartRef.current)
-        .selectAll('.bars')
-        .filter(function () {
-          if (x === curMessage.interactionKey)
-            return +d3.select(this).attr('data-label') === curMessage.message
-          else return +d3.select(this).attr('data-value') === curMessage.message
-        })
-        .style('opacity', 1)
-    }
+  React.useEffect(() => {
+    if (!curMessage || !curMessage.hoverOrNot) return
+
+    if (
+      curMessage.interactionType !== allowedInteractionType ||
+      curMessage.interactionKey !== interactionKey
+    )
+      return
+
+    const currentChart = d3.select(chartRef.current)
+    currentChart.selectAll('.bar-group').style('opacity', 0.6)
+
+    currentChart
+      .selectAll('.bar-group')
+      .filter(function () {
+        const element = d3.select(this)
+        return interactionKey === y
+          ? +element.attr('data-value') === curMessage.message
+          : element.attr('data-label') === curMessage.message
+      })
+      .style('opacity', 1)
   }, [curMessage])
 
-  // 处理透明度
   React.useEffect(() => {
-    // if (!interactiveRef.current) {
-    //   return
-    // }
-    if (curMessage.hoverOrNot === undefined) {
-      return
-    }
+    if (curMessage.hoverOrNot === undefined) return
     if (!curMessage.hoverOrNot) {
       d3.select(chartRef.current)
         .selectAll('*:not(.tooltip)')
@@ -490,7 +518,6 @@ const Bar: React.FC<BarProps> = ({
       style={{
         width: width,
         height: height,
-        // qqqq
         position: 'absolute',
         left: left,
         top: top,
@@ -498,12 +525,13 @@ const Bar: React.FC<BarProps> = ({
   )
 }
 
+// 包装组件
 const BarWithRedux: React.FC<BarProps> = (props) => (
   <ReduxProviderWrapper>
     <Bar {...props} />
   </ReduxProviderWrapper>
 )
-// 1
+
 const BarWithWrapper: React.FC<figWrapperProps & BarProps> = ({
   data,
   width,
@@ -517,8 +545,7 @@ const BarWithWrapper: React.FC<figWrapperProps & BarProps> = ({
   y,
   interactionType,
   interactionKey,
-  allowedinteractionType,
-  // allowedinteractionKey
+  allowedInteractionType,
   groupBy = null,
   transform,
   xAxis,
@@ -526,8 +553,8 @@ const BarWithWrapper: React.FC<figWrapperProps & BarProps> = ({
   legend,
   tooltip,
   color,
+  title,
 }) => {
-  // Calculate new width and height
   const newWidth = `100%`
   const newHeight = `95%`
   const newLeft = '10px'
@@ -538,8 +565,8 @@ const BarWithWrapper: React.FC<figWrapperProps & BarProps> = ({
       width={width}
       height={height}
       id={id}
-      left={left} // Fixed left position
-      top={top} // Fixed top position
+      left={left}
+      top={top}
       offsetLeft={offsetLeft}
       offsetTop={offsetTop}>
       <BarWithRedux
@@ -552,20 +579,18 @@ const BarWithWrapper: React.FC<figWrapperProps & BarProps> = ({
         y={y}
         interactionType={interactionType}
         interactionKey={interactionKey}
-        allowedinteractionType={allowedinteractionType}
-        // allowedinteractionKey={allowedinteractionKey}
+        allowedInteractionType={allowedInteractionType}
         groupBy={groupBy}
-        // 1
         transform={transform}
         xAxis={xAxis}
         yAxis={yAxis}
         legend={legend}
         tooltip={tooltip}
         color={color}
+        title={title}
       />
     </WrapperWithButton>
   )
 }
 
 export default BarWithWrapper
-// export default Bar

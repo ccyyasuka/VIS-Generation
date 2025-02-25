@@ -18,7 +18,6 @@ function FileUpload() {
   const [viewMode, setViewMode] = useState<'字段详情' | '数据概览'>('字段详情')
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([])
 
-
   const uploadProps: UploadProps = {
     name: 'file',
     multiple: false,
@@ -57,10 +56,10 @@ function FileUpload() {
     reader.onload = (event) => {
       try {
         const content = JSON.parse(event.target?.result as string)
+        debugger
         dispatch(
           updateKV({
-            selectedData: content.data,
-            config: content.curConfig,
+            config: content.config,
           })
         )
         message.success('JSON 数据加载成功')
@@ -71,7 +70,7 @@ function FileUpload() {
 
     reader.readAsText(file)
   }
-  
+
   const handleFileUploadClick = () => {
     const input = document.createElement('input')
     input.type = 'file'
@@ -106,14 +105,13 @@ function FileUpload() {
 
   return (
     <div className={style.controlBar}>
-      <div className={style.head}>控制栏</div>
+      <div className={style.head}>Control Bar</div>
       <div className={style.main}>
         <Button
           type="primary"
-          icon={<InboxOutlined />}
           onClick={handleFileUploadClick}
           style={{ marginTop: '20px' }}>
-          点击上传文件
+          Upload Data File
         </Button>
 
         <Button
@@ -127,14 +125,14 @@ function FileUpload() {
           }}
           type="primary"
           style={{ marginTop: '20px' }}>
-          加载 JSON 配置
+          Load Dashboard Data
         </Button>
 
         <Button
           onClick={handleDownload}
           type="primary"
           style={{ marginTop: '20px' }}>
-          导出当前视图
+          Export Dashboard Data
         </Button>
       </div>
     </div>

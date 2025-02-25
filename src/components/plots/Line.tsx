@@ -8,6 +8,7 @@ import { AppState, ReduxProviderWrapper } from './redux/store'
 import WrapperWithButton, { figWrapperProps } from '../wrapperButton'
 import applyTransformations from './tools/transformApply'
 import preprocessData from './tools/preprocess'
+import calculateMargin from './tools/calMargin'
 type LineDataItem = {
   label: string // Typically, this would be a category or time point
   value: number // Value for that point
@@ -40,6 +41,7 @@ function drawLineChart(
   curInteractionKey: string, // 指明是label还是value
   xx: string,
   yy: string,
+  title: string,
   xAxis: {
     xAxisLabel?: string // x轴名称
     format?: string // x轴坐标格式化函数
@@ -106,7 +108,10 @@ function drawLineChart(
   const container = element
   const width = container.clientWidth // 使用容器的宽度
   const height = container.clientHeight // 使用容器的高度
-  const margin = { top: 30, right: 20, bottom: 40, left: 60 }
+  const margin = calculateMargin(
+    legend?.legendPosition,
+    legend?.legendOrientation
+  )
 
   // 在容器中创建 SVG 元素
   const svg = d3
@@ -143,6 +148,7 @@ function drawLineChart(
     .range(color || d3.schemeCategory10)
 
   // 按组绘制折线
+
   groups.forEach((group) => {
     const groupData = data.filter((d) => d.groupBy === group)
 
@@ -219,19 +225,19 @@ function drawLineChart(
     let legendTransform = ''
     switch (legend.legendPosition) {
       case 'top-left':
-        legendTransform = `translate(5, 1)`
+        legendTransform = `translate(1, 1)`
         break
       case 'top-right':
-        legendTransform = `translate(${width - 150}, 1)`
+        legendTransform = `translate(${width - margin.right}, 1)`
         break
       case 'bottom-left':
-        legendTransform = `translate(20, ${height - 10})`
+        legendTransform = `translate(20, ${height - margin.top})`
         break
       case 'bottom-right':
-        legendTransform = `translate(${width - 100}, ${height - 10})`
+        legendTransform = `translate(20, ${height - margin.top})`
         break
       default:
-        legendTransform = `translate(${width - 150}, 2)`
+        legendTransform = `translate(${width - margin.right}, 1)`
     }
 
     legendGroup.attr('transform', legendTransform)
@@ -265,7 +271,7 @@ function drawLineChart(
       .text((d) => {
         const text = d
         // 如果文本超过10个字符，添加省略号
-        return text.length > 3 ? text.slice(0, 3) + '...' : text
+        return text.length > 7 ? text.slice(0, 7) + '...' : text
       })
   }
 
@@ -355,6 +361,15 @@ function drawLineChart(
       .text(yAxisLabel)
       .style('font-size', '14px')
   }
+  if (title) {
+    svg
+      .append('text')
+      .attr('x', width / 2) // 设置x坐标为视图宽度的一半，使文本居中
+      .attr('y', margin.top / 2 - 4) // 设置y坐标为顶部外边距的一半，并稍微向上一些以留出空间
+      .attr('text-anchor', 'middle') // 文本锚点设置为中间对齐
+      .style('font-size', '14px') // 可选：设置字体大小
+      .text(title) // 设置文本内容为description
+  }
 }
 type DataItem = {
   [key: string]: any
@@ -369,7 +384,7 @@ interface LineProps {
   y: string
   interactionType: string
   interactionKey: string
-  allowedinteractionType: string
+  allowedInteractionType: string
   // allowedinteractionKey: string
   groupBy: string | null
   transform?: {
@@ -395,6 +410,7 @@ interface LineProps {
   legend?: { open: boolean; legendPosition: string; legendOrientation: string }
   tooltip?: { open: boolean; text: string }
   color?: string[]
+  title: string
 }
 
 const Line: React.FC<LineProps> = ({
@@ -407,7 +423,7 @@ const Line: React.FC<LineProps> = ({
   y,
   interactionType,
   interactionKey,
-  allowedinteractionType,
+  allowedInteractionType,
   // allowedinteractionKey
   groupBy = null,
   transform,
@@ -416,6 +432,7 @@ const Line: React.FC<LineProps> = ({
   legend,
   tooltip,
   color,
+  title,
 }) => {
   const chartRef = useRef<HTMLDivElement>(null)
   const curMessage: messageType = useSelector(
@@ -426,7 +443,7 @@ const Line: React.FC<LineProps> = ({
   const processedData = preprocessData(transformedData, x, y, groupBy)
   useEffect(() => {
     if (chartRef.current) {
-      let curInteractionKey = interactionKey === x ? 'label' : 'value'
+      let curInteractionKey = interactionKey === y ? 'value' : 'label'
       drawLineChart(
         processedData,
         chartRef.current,
@@ -436,6 +453,7 @@ const Line: React.FC<LineProps> = ({
         curInteractionKey,
         x,
         y,
+        title,
         xAxis,
         yAxis,
         legend,
@@ -450,8 +468,8 @@ const Line: React.FC<LineProps> = ({
     if (curMessage === undefined) {
       return
     }
-    console.log(curMessage.interactionType, allowedinteractionType)
-    if (!allowedinteractionType) {
+    console.log(curMessage.interactionType, allowedInteractionType)
+    if (!allowedInteractionType) {
       return
     }
     if (curMessage.interactionKey !== undefined) {
@@ -463,7 +481,7 @@ const Line: React.FC<LineProps> = ({
       }
     }
 
-    if (curMessage.interactionType === allowedinteractionType) {
+    if (curMessage.interactionType === allowedInteractionType) {
       // console.log("debug-data-value", message)
       d3.select(chartRef.current).selectAll('.points').style('opacity', 0.3)
       d3.select(chartRef.current).selectAll('.lines').style('opacity', 0.3)
@@ -527,7 +545,7 @@ const BarWithWrapper: React.FC<figWrapperProps & LineProps> = ({
   id,
   interactionType,
   interactionKey,
-  allowedinteractionType,
+  allowedInteractionType,
   // allowedinteractionKey
   groupBy = null,
   transform,
@@ -536,6 +554,7 @@ const BarWithWrapper: React.FC<figWrapperProps & LineProps> = ({
   legend,
   tooltip,
   color,
+  title,
 }) => {
   // Calculate new width and height
   const newWidth = `100%`
@@ -562,7 +581,7 @@ const BarWithWrapper: React.FC<figWrapperProps & LineProps> = ({
         y={y}
         interactionType={interactionType}
         interactionKey={interactionKey}
-        allowedinteractionType={allowedinteractionType}
+        allowedInteractionType={allowedInteractionType}
         // allowedinteractionKey={allowedinteractionKey}
         groupBy={groupBy}
         transform={transform}
@@ -571,6 +590,7 @@ const BarWithWrapper: React.FC<figWrapperProps & LineProps> = ({
         legend={legend}
         tooltip={tooltip}
         color={color}
+        title={title}
       />
     </WrapperWithButton>
   )

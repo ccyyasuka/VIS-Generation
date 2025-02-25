@@ -9,6 +9,7 @@ import { ReduxProviderWrapper } from './redux/store'
 import WrapperWithButton, { figWrapperProps } from '../wrapperButton'
 import applyTransformations from './tools/transformApply'
 import preprocessData from './tools/preprocess'
+import calculateMargin from './tools/calMargin'
 type scatterDataItem = {
   x: number
   y: number
@@ -16,7 +17,23 @@ type scatterDataItem = {
   z?: number
   [key: string]: any
 }
-
+// const legendAcquiesce = {
+//   open: true,
+//   legendPosition: 'top-right',
+//   legendOrientation: 'vertical',
+// }
+const xAxisAcquiesce = {
+  xAxisLabel: '', // x轴名称
+  // format: string // x轴坐标格式化函数
+  angle: 0, // x轴标签旋转角度
+  tickSize: 6, // x轴刻度线大小
+}
+const yAxisAcquiesce = {
+  yAxisLabel: '', // x轴名称
+  // format: string // x轴坐标格式化函数
+  angle: 0, // x轴标签旋转角度
+  tickSize: 6, // x轴刻度线大小
+}
 function drawScatterPlot(
   data: scatterDataItem[],
   element: HTMLSpanElement,
@@ -26,20 +43,24 @@ function drawScatterPlot(
   curInteractionKey: string, //指明是label还是value
   xx: string,
   yy: string,
-  zz?: string,
-  xAxis?: {
+  title: string,
+  xAxis: {
     xAxisLabel?: string // x轴名称
     format?: string // x轴坐标格式化函数
     angle?: number // x轴标签旋转角度
     tickSize?: number // x轴刻度线大小
-  },
-  yAxis?: {
+  } = xAxisAcquiesce,
+  yAxis: {
     yAxisLabel?: string // y轴名称
     format?: string // y轴坐标格式化函数
     angle?: number // y轴标签旋转角度
     tickSize?: number // y轴刻度线大小
+  } = yAxisAcquiesce,
+  legend?: {
+    open: boolean
+    legendPosition: string
+    legendOrientation: string
   },
-  legend?: { open: boolean; legendPosition: string; legendOrientation: string },
   tooltip?: { open: boolean; text: string },
   color?: string[]
 ): void {
@@ -85,7 +106,10 @@ function drawScatterPlot(
 
   const width = container.clientWidth
   const height = container.clientHeight
-  const margin = { top: 30, right: 20, bottom: 40, left: 60 }
+  const margin = calculateMargin(
+    legend?.legendPosition,
+    legend?.legendOrientation
+  )
 
   const svg = d3
     .select(container)
@@ -100,6 +124,11 @@ function drawScatterPlot(
   const innerWidth = width - margin.left - margin.right
   const innerHeight = height - margin.top - margin.bottom
 
+  const groups = Array.from(new Set(data.map((d) => d.label))).filter(
+    Boolean
+  ) as string[]
+  // const labels = Array.from(new Set(data.map((d) => d.label)))
+
   const x = d3
     .scaleLinear()
     .domain([0, d3.max(data, (d) => d.x) as number])
@@ -109,6 +138,11 @@ function drawScatterPlot(
     .scaleLinear()
     .domain([0, d3.max(data, (d) => d.y) as number])
     .range([innerHeight, 0])
+
+  const customColors = d3
+    .scaleOrdinal<string>()
+    .domain(groups)
+    .range(color || d3.schemeCategory10)
 
   // chart
   //   .append('g')
@@ -143,6 +177,7 @@ function drawScatterPlot(
         const tooltipText = tooltip.text
           .replace('{x}', d.x.toString())
           .replace('{y}', d.y.toFixed(2))
+          .replace('{z}', d.label || '{z}')
         tooltipElement
           .html(tooltipText)
           .style('visibility', 'visible')
@@ -194,19 +229,19 @@ function drawScatterPlot(
     let legendTransform = ''
     switch (legend.legendPosition) {
       case 'top-left':
-        legendTransform = `translate(5, 1)`
+        legendTransform = `translate(1, 1)`
         break
       case 'top-right':
-        legendTransform = `translate(${width - 100}, 1)`
+        legendTransform = `translate(${width - margin.right + 10}, 1)`
         break
       case 'bottom-left':
-        legendTransform = `translate(20, ${height - 10})`
+        legendTransform = `translate(20, ${height - margin.top})`
         break
       case 'bottom-right':
-        legendTransform = `translate(${width - 100}, ${height - 10})`
+        legendTransform = `translate(20, ${height - margin.top})`
         break
       default:
-        legendTransform = `translate(${width - 100}, 20)`
+        legendTransform = `translate(${width - margin.right}, 1)`
     }
 
     legendGroup.attr('transform', legendTransform)
@@ -214,12 +249,15 @@ function drawScatterPlot(
     // Generate legend items
     const legendItems = legendGroup
       .selectAll('g')
-      .data(uniqueLabels as string[])
+      .data(groups.slice(0, 12))
       .enter()
       .append('g')
       .attr(
         'transform',
-        (d, i) => `translate(${i * 40}, 0)` // Horizontal
+        (d, i) =>
+          legend.legendOrientation === 'vertical'
+            ? `translate(0, ${i * 20})` // 纵向排列
+            : `translate(${i * 40}, 0)` // 水平排列
       )
 
     legendItems
@@ -227,7 +265,7 @@ function drawScatterPlot(
       .attr('x', 0)
       .attr('width', 19)
       .attr('height', 19)
-      .attr('fill', (d) => colorScale(d)) // Use the same color scale as the dots
+      .attr('fill', (d) => customColors(d))
 
     legendItems
       .append('text')
@@ -237,7 +275,7 @@ function drawScatterPlot(
       .text((d) => {
         const text = d
         // 如果文本超过10个字符，添加省略号
-        return text.length > 3 ? text.slice(0, 3) + '...' : text
+        return text.length > 7 ? text.slice(0, 7) + '...' : text
       })
   }
 
@@ -307,6 +345,15 @@ function drawScatterPlot(
       .text(yAxisLabel)
       .style('font-size', '14px')
   }
+  if (title) {
+    svg
+      .append('text')
+      .attr('x', width / 2) // 设置x坐标为视图宽度的一半，使文本居中
+      .attr('y', margin.top / 2 - 4) // 设置y坐标为顶部外边距的一半，并稍微向上一些以留出空间
+      .attr('text-anchor', 'middle') // 文本锚点设置为中间对齐
+      .style('font-size', '14px') // 可选：设置字体大小
+      .text(title) // 设置文本内容为description
+  }
 }
 type DataItem = {
   [key: string]: any
@@ -322,7 +369,7 @@ interface ScatterProps {
   z?: string
   interactionType: string
   interactionKey: string
-  allowedinteractionType: string
+  allowedInteractionType: string
   groupBy: string | null
   transform?: {
     type: string
@@ -347,6 +394,7 @@ interface ScatterProps {
   legend?: { open: boolean; legendPosition: string; legendOrientation: string }
   tooltip?: { open: boolean; text: string }
   color?: string[]
+  title: string
 }
 
 const Scatter: React.FC<ScatterProps> = ({
@@ -360,7 +408,7 @@ const Scatter: React.FC<ScatterProps> = ({
   z,
   interactionType,
   interactionKey,
-  allowedinteractionType,
+  allowedInteractionType,
   groupBy = null,
   transform,
   xAxis,
@@ -368,6 +416,7 @@ const Scatter: React.FC<ScatterProps> = ({
   legend,
   tooltip,
   color,
+  title,
 }) => {
   const dispatch = useDispatch()
   const curMessage: messageType = useSelector(
@@ -394,7 +443,7 @@ const Scatter: React.FC<ScatterProps> = ({
           curInteractionKey = 'y'
           break
         default:
-          curInteractionKey = 'label'
+          curInteractionKey = 'x'
       }
       drawScatterPlot(
         updatedData,
@@ -405,7 +454,7 @@ const Scatter: React.FC<ScatterProps> = ({
         curInteractionKey,
         x,
         y,
-        z,
+        title,
         xAxis,
         yAxis,
         legend,
@@ -419,7 +468,7 @@ const Scatter: React.FC<ScatterProps> = ({
     if (curMessage === undefined) {
       return
     }
-    if (!allowedinteractionType) {
+    if (!allowedInteractionType) {
       return
     }
     if (curMessage.interactionKey !== undefined) {
@@ -431,7 +480,7 @@ const Scatter: React.FC<ScatterProps> = ({
       }
     }
 
-    if (curMessage.interactionType === allowedinteractionType) {
+    if (curMessage.interactionType === allowedInteractionType) {
       d3.select(chartRef.current).selectAll('.dots').style('opacity', 0.3)
       d3.select(chartRef.current)
         .selectAll('.dots')
@@ -440,7 +489,7 @@ const Scatter: React.FC<ScatterProps> = ({
             return +d3.select(this).attr('data-x') === curMessage.message
           else if (y === curMessage.interactionKey)
             return +d3.select(this).attr('data-y') === curMessage.message
-          else return +d3.select(this).attr('data-label') === curMessage.message
+          else return d3.select(this).attr('data-label') === curMessage.message
         })
         .style('opacity', 1)
     }
@@ -490,7 +539,7 @@ const ScatterWithWrapper: React.FC<figWrapperProps & ScatterProps> = ({
   z,
   interactionType,
   interactionKey,
-  allowedinteractionType,
+  allowedInteractionType,
   // allowedinteractionKey
   groupBy = null,
   transform,
@@ -499,6 +548,7 @@ const ScatterWithWrapper: React.FC<figWrapperProps & ScatterProps> = ({
   legend,
   tooltip,
   color,
+  title,
 }) => {
   // Calculate new width and height
   const newWidth = `100%`
@@ -526,7 +576,7 @@ const ScatterWithWrapper: React.FC<figWrapperProps & ScatterProps> = ({
         z={z}
         interactionType={interactionType}
         interactionKey={interactionKey}
-        allowedinteractionType={allowedinteractionType}
+        allowedInteractionType={allowedInteractionType}
         // allowedinteractionKey={allowedinteractionKey}
         groupBy={groupBy}
         transform={transform}
@@ -535,6 +585,7 @@ const ScatterWithWrapper: React.FC<figWrapperProps & ScatterProps> = ({
         legend={legend}
         tooltip={tooltip}
         color={color}
+        title={title}
       />
     </WrapperWithButton>
   )

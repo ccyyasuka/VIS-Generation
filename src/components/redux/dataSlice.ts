@@ -28,7 +28,7 @@ export interface DataState {
   dataPath: string
   loading: boolean
   error: string | null
-  chatContent: { role: string; summary: string;recommendation?:string[] }[]
+  chatContent: { role: string; summary: string; recommendation?: string[] }[]
   selectedData: any
   config: configState[]
 }
@@ -43,8 +43,11 @@ const initialState: DataState = {
   loading: false,
   error: null,
   chatContent: [
-    { role: 'user', summary: '你好，请问你是谁' },
-    { role: 'assistant', summary: '我是你的智能可视分析助手' },
+    { role: 'user', summary: 'Hello, Who are you.' },
+    {
+      role: 'assistant',
+      summary: "I'm your intelligent visual analysis assistant.",
+    },
   ],
   selectedData: null,
   config: [],
@@ -100,7 +103,7 @@ export const uploadFileAndSetData = (
 > => {
   return async (dispatch: Dispatch, getState: () => { data: DataState }) => {
     dispatch(updateKV({ loading: true, error: null }))
-    const newChat = { role: 'user', summary: '上传了文件' }
+    const newChat = { role: 'user', summary: 'The user uploaded the file' }
 
     const { chatContent } = getState().data
     dispatch(
@@ -141,15 +144,17 @@ export const uploadFileAndSetData = (
     }
 
     const data = await response.json()
-    const {
+    let {
       graph_data: graphDatastr,
       reply: reply,
-      graphs_grammar: graphsGrammarstr,
+      graphs_grammar: graphsGrammar,
       recommendation: recommendation,
       graph_layout: graphLayout,
     } = data
     let graphData = JSON.parse(graphDatastr)
-    let graphsGrammar = graphsGrammarstr
+    // let graphsGrammar = JSON.parse(graphsGrammarstr)
+    // let graphLayout = JSON.parse(graphLayoutstr)
+    // let recommendation = JSON.parse(recommendationstr)
     graphsGrammar = graphsGrammar.map((item: any) => {
       item.data = graphData
       return item
@@ -270,13 +275,12 @@ export const uploadFileAndSetData = (
 export const sendChatMessage = (inputValue: string) => {
   return async (dispatch: Dispatch, getState: () => { data: DataState }) => {
     try {
-      debugger
       const { chatContent, dataPath, config } = getState().data
 
       const reservedGraph = config.map((item) => {
         return { id: item.id, description: item.description }
       })
-      chatContent[chatContent.length-1].recommendation=[]
+      chatContent[chatContent.length - 1].recommendation = []
       const newChat = { role: 'user', summary: inputValue }
       dispatch(
         updateKV({
@@ -300,15 +304,17 @@ export const sendChatMessage = (inputValue: string) => {
 
       const data = await response.json()
 
-      const {
+      let {
         graph_data: graphDatastr,
         reply: reply,
-        graphs_grammar: graphsGrammarstr,
+        graphs_grammar: graphsGrammar,
         recommendation: recommendation,
         graph_layout: graphLayout,
       } = data
       let graphData = JSON.parse(graphDatastr)
-      let graphsGrammar = graphsGrammarstr
+      // let graphsGrammar = JSON.parse(graphsGrammarstr)
+      // let graphLayout = JSON.parse(graphLayoutstr)
+      // let recommendation = JSON.parse(recommendationstr)
       graphsGrammar = graphsGrammar.map((item: any) => {
         item.data = graphData
         return item

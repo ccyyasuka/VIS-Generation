@@ -14,6 +14,11 @@ import { DownloadOutlined } from '@ant-design/icons'
 import { style } from 'd3'
 import { saveAs } from 'file-saver'
 import testdata from '../testData/sales_data.json'
+import regularData from '../testData/top_3pt_regular_players.json'
+import playoffData from '../testData/top_3pt_Playoffs_players.json'
+import timeSeriesData from '../testData/top_players_3PCT_every_year.json'
+import playoffData30 from '../testData/top_3pt_Playoffs_players_30.json'
+
 // type DataItem = {
 //   label: string
 //   value: number
@@ -24,6 +29,8 @@ interface MainViewProps {
 type ConfigItem = {
   name: string
   id: string
+  description: string
+  title: string
   meta: {
     width: string
     height: string
@@ -32,7 +39,7 @@ type ConfigItem = {
   }
   interactionType: string
   interactionKey: string
-  allowedinteractionType: string
+  allowedInteractionType: string
   transform?: {
     type: string
     config: {
@@ -69,10 +76,11 @@ const MainView: React.FC<MainViewProps> = ({ offset }) => {
 
   const { selectedData, config } = useSelector((state: any) => state.data)
   // // console.log('selectedData, config', selectedData, config)
-  // const data: any[] = selectedData
+  const data: any[] = selectedData
 
-  // const curConfig: ConfigItem[] = config
-  // console.log('curConfig', curConfig)
+  debugger
+  const curConfig: ConfigItem[] = config
+  console.log('curConfig', curConfig)
 
   // console.log('datadatadatadata11111', data, curConfig)
   // 统计数据测试样例
@@ -142,255 +150,245 @@ const MainView: React.FC<MainViewProps> = ({ offset }) => {
 
   // // 历史行为习惯
   // // assistant api 大模型选择参数
-  const curConfig: ConfigItem[] = [
-    // {
-    //   name: 'ArcDiagram',
-    //   meta: {
-    //     width: '60%',
-    //     height: '60%',
-    //     left: '15%',
-    //     top: '5%',
-    //   },
-    //   interactionType: 'filter',
-    //   interactionKey: 'height',
-    //   allowedinteractionType: 'filter',
-    // },
-    // {
-    //   name: 'BarRight',
-    //   meta: {
-    //     width: '40%',
-    //     height: '20%',
-    //     left: '15%',
-    //     top: '5%',
-    //   },
-    //   x: 'year',
-    //   y: 'height',
-    //   interactionType: 'filter',
-    //   interactionKey: 'height',
-    //   allowedinteractionType: 'filter',
-    // },
-    {
-      name: 'Line',
-      description: '不同支付方式的销售额趋势',
-      id: 'trrrr',
-      data: testdata,
-      meta: {
-        width: '40%',
-        height: '40%',
-        left: '5%',
-        top: '5%',
-      },
-      x: 'Sale_Date',
-      y: 'Sales_Amount',
-      interactionType: 'filter_01',
-      interactionKey: 'Sale_Date',
-      allowedinteractionType: 'filter_02',
-      legendBy: 'Payment_Method',
-      // transform: {
-      //   type: 'groupBy',
-      //   config: {
-      //     dimension: 'Payment_Method',
-      //     condition: 'sum',
-      //     // value: "Sales_Amount"
-      //   },
-      // },
-      legend: {
-        open: true,
-        legendPosition: 'top',
-        legendOrientation: 'horizontal',
-      },
-      tooltip: {
-        open: true,
-        text: '{x}的销售额是{y}',
-      },
-    },
-    {
-      name: 'Line',
-      description: '不同支付方式的销售量趋势',
-      id: 'aasdasdcf',
-      data: testdata,
-      meta: {
-        width: '60%',
-        height: '50%',
-        left: '20%',
-        top: '45%',
-      },
-      x: 'Sale_Date',
-      y: 'Quantity_Sold',
-      interactionType: 'filter_02',
-      interactionKey: 'Sale_Date',
-      allowedinteractionType: 'filter_01',
-      legendBy: 'Payment_Method',
-      // transform: {
-      //   type: 'groupBy',
-      //   config: {
-      //     dimension: 'Payment_Method',
-      //     condition: 'sum',
-      //     // value: "Quantity_Sold"
-      //   },
-      // },
-      legend: {
-        open: true,
-        legendPosition: 'top',
-        legendOrientation: 'horizontal',
-      },
-      tooltip: {
-        open: true,
-        text: '{x}的销售量是{y}',
-      },
-    },
+  // const curConfig: ConfigItem[] = [
+  //   // {
+  //   //   name: 'ArcDiagram',
+  //   //   meta: {
+  //   //     width: '60%',
+  //   //     height: '60%',
+  //   //     left: '15%',
+  //   //     top: '5%',
+  //   //   },
+  //   //   interactionType: 'filter',
+  //   //   interactionKey: 'height',
+  //   //   allowedInteractionType: 'filter',
+  //   // },
+  //   // {
+  //   //   name: 'BarRight',
+  //   //   meta: {
+  //   //     width: '40%',
+  //   //     height: '20%',
+  //   //     left: '15%',
+  //   //     top: '5%',
+  //   //   },
+  //   //   x: 'year',
+  //   //   y: 'height',
+  //   //   interactionType: 'filter',
+  //   //   interactionKey: 'height',
+  //   //   allowedInteractionType: 'filter',
+  //   // },
+  //   // {
+  //   //   name: 'Line',
+  //   //   description: '不同支付方式的销售额趋势',
+  //   //   id: 'trrrr',
+  //   //   data: testdata,
+  //   //   meta: {
+  //   //     width: '40%',
+  //   //     height: '40%',
+  //   //     left: '5%',
+  //   //     top: '5%',
+  //   //   },
+  //   //   x: 'Sale_Date',
+  //   //   y: 'Sales_Amount',
+  //   //   interactionType: 'filter_01',
+  //   //   interactionKey: 'Sale_Date',
+  //   //   allowedInteractionType: 'filter_02',
+  //   //   legendBy: 'Payment_Method',
+  //   //   // transform: {
+  //   //   //   type: 'groupBy',
+  //   //   //   config: {
+  //   //   //     dimension: 'Payment_Method',
+  //   //   //     condition: 'sum',
+  //   //   //     // value: "Sales_Amount"
+  //   //   //   },
+  //   //   // },
+  //   //   legend: {
+  //   //     open: true,
+  //   //     legendPosition: 'top',
+  //   //     legendOrientation: 'horizontal',
+  //   //   },
+  //   //   tooltip: {
+  //   //     open: true,
+  //   //     text: '{x}的销售额是{y}',
+  //   //   },
+  //   // },
+  //   // {
+  //   //   name: 'Line',
+  //   //   description: '不同支付方式的销售量趋势',
+  //   //   id: 'aasdasdcf',
+  //   //   data: testdata,
+  //   //   meta: {
+  //   //     width: '60%',
+  //   //     height: '50%',
+  //   //     left: '20%',
+  //   //     top: '45%',
+  //   //   },
+  //   //   x: 'Sale_Date',
+  //   //   y: 'Quantity_Sold',
+  //   //   interactionType: 'filter_02',
+  //   //   interactionKey: 'Sale_Date',
+  //   //   allowedInteractionType: 'filter_01',
+  //   //   legendBy: 'Payment_Method',
+  //   //   // transform: {
+  //   //   //   type: 'groupBy',
+  //   //   //   config: {
+  //   //   //     dimension: 'Payment_Method',
+  //   //   //     condition: 'sum',
+  //   //   //     // value: "Quantity_Sold"
+  //   //   //   },
+  //   //   // },
+  //   //   legend: {
+  //   //     open: true,
+  //   //     legendPosition: 'top',
+  //   //     legendOrientation: 'horizontal',
+  //   //   },
+  //   //   tooltip: {
+  //   //     open: true,
+  //   //     text: '{x}的销售量是{y}',
+  //   //   },
+  //   // },
 
-    // {
-    //   name: 'BarVertical',
-    //   id: 'xcfgvh',
-    //   data: data1,
-    //   meta: {
-    //     width: '40%',
-    //     height: '40%',
-    //     left: '5%',
-    //     top: '5%',
-    //   },
-    //   x: 'year',
-    //   y: 'height',
-    //   interactionType: 'filter',
-    //   interactionKey: 'height',
-    //   allowedinteractionType: 'filter',
-    //   allowedinteractionKey: 'year',
-    //   legandBy: 'category',
-    //   transform: {
-    //     type: 'filter',
-    //     config: {
-    //       dimension: 'year',
-    //       condition: '<',
-    //       value: 2022,
-    //     },
-    //   },
-    //   xAxis: {
-    //     xAxisLabel: 'aaaa', // x轴名称
-    //     format: '{x}年', // x轴坐标格式化函数
-    //     // angle: 20, // x轴标签旋转角度
-    //     tickSize: 6, // x轴刻度线大小
-    //   },
-    //   yAxis: {
-    //     yAxisLabel: 'abcd', // y轴名称
-    //     format: '{y} kg', // y轴坐标格式化函数
-    //     // angle: 28, // y轴标签旋转角度
-    //     tickSize: 6, // y轴刻度线大小
-    //   },
-    //   legend: {
-    //     open: true,
-    //     legendPosition: 'top-right',
-    //     legendOrientation: 'horizontal',
-    //   },
-    //   tooltip: { open: true, text: '{x}的重量是{y}' },
-    //   color: ['#c23531', '#2f4554', '#61a0a8'],
-    // },
-    // {
-    //   name: 'Donat',
-    //   meta: {
-    //     width: '30%',
-    //     height: '30%',
-    //     left: '25%',
-    //     top: '55%',
-    //   },
-    //   x: 'year',
-    //   y: 'height',
-    //   interactionType: 'filter',
-    //   interactionKey: 'height',
-    //   allowedinteractionType: 'filter',
-    // },
-
-    // {
-    //   name: 'ArcDiagram',
-    //   id: '19562',
-    //   data: data2,
-    //   meta: {
-    //     width: '30%',
-    //     height: '30%',
-    //     left: '65%',
-    //     top: '5%',
-    //   },
-    //   x: 'year',
-    //   y: 'height',
-    //   interactionType: 'filter',
-    //   interactionKey: 'year',
-    //   allowedinteractionType: 'filter',
-    //   allowedinteractionKey: 'height',
-    //   legandBy: 'category',
-    // },
-    // {
-    //   name: 'Scatter',
-    //   id: 'xcfgvh22',
-    //   data: data1,
-    //   meta: {
-    //     width: '40%',
-    //     height: '40%',
-    //     left: '35%',
-    //     top: '45%',
-    //   },
-    //   x: 'weight',
-    //   y: 'height',
-    //   z:"value",
-    //   interactionType: 'filter',
-    //   interactionKey: 'height',
-    //   allowedinteractionType: 'filter',
-    //   allowedinteractionKey: 'year',
-    //   legandBy: 'category',
-    //   transform: {
-    //     type: 'filter',
-    //     config: {
-    //       dimension: 'year',
-    //       condition: '<',
-    //       value: 2022,
-    //     },
-    //   },
-    //   xAxis: {
-    //     xAxisLabel: 'aaaa', // x轴名称
-    //     format: '{x} kg', // x轴坐标格式化函数
-    //     angle: 20, // x轴标签旋转角度
-    //     tickSize: 6, // x轴刻度线大小
-    //   },
-    //   yAxis: {
-    //     yAxisLabel: 'abcd', // y轴名称
-    //     format: '{y} m', // y轴坐标格式化函数
-    //     angle: 28, // y轴标签旋转角度
-    //     tickSize: 6, // y轴刻度线大小
-    //   },
-    //   legend: {
-    //     open: true,
-    //     legendPosition: 'top-right',
-    //     legendOrientation: 'horizontal',
-    //   },
-    //   tooltip: { open: true, text: '{x}的重量是{y}' },
-    //   color: ['#c23531', '#2f4554', '#61a0a8'],
-    // },
-    // {
-    //   name: 'Scatter',
-    //   meta: {
-    //     width: '30%',
-    //     height: '30%',
-    //     left: '15%',
-    //     top: '85%',
-    //   },
-    //   x: 'height',
-    //   y: 'weight',
-    //   z: 'value',
-    //   interactionType: 'filter',
-    //   interactionKey: 'height',
-    //   allowedinteractionType: 'filter',
-    // },
-    // {
-    //   name: 'Area',
-    //   meta: {
-    //     width: '30%',
-    //     height: '30%',
-    //     left: '25%',
-    //     top: '35%',
-    //   },
-    //   interactionType: 'filter',
-    //   allowedinteractionType: 'ByValue',
-    // },
-  ]
+  //   {
+  //     name: 'Line',
+  //     description: '不同支付方式的销售额趋势',
+  //     id: 'trrrr',
+  //     data: timeSeriesData,
+  //     meta: {
+  //       width: '45%',
+  //       height: '45%',
+  //       left: '3%',
+  //       top: '3%',
+  //     },
+  //     x: 'year',
+  //     y: 'FG3_PCT',
+  //     interactionType: 'filter_01',
+  //     interactionKey: 'year',
+  //     allowedInteractionType: 'filter_02',
+  //     legendBy: 'PLAYER',
+  //     // transform: {
+  //     //   type: 'groupBy',
+  //     //   config: {
+  //     //     dimension: 'Payment_Method',
+  //     //     condition: 'sum',
+  //     //     // value: "Sales_Amount"
+  //     //   },
+  //     // },
+  //     legend: {
+  //       open: true,
+  //       legendPosition: 'top-right',
+  //       legendOrientation: 'vertical',
+  //     },
+  //     tooltip: {
+  //       open: true,
+  //       text: '{x}的销售额是{y}',
+  //     },
+  //   },
+  //   {
+  //     name: 'BarVertical',
+  //     description: '不同支付方式的销售额趋势',
+  //     id: 'trrrr',
+  //     data: regularData,
+  //     meta: {
+  //       width: '45%',
+  //       height: '45%',
+  //       left: '53%',
+  //       top: '3%',
+  //     },
+  //     x: 'PLAYER',
+  //     y: 'FG3_PCT',
+  //     interactionType: 'filter_01',
+  //     interactionKey: 'PLAYER',
+  //     allowedInteractionType: 'filter_02',
+  //     // legendBy: 'PLAYER',
+  //     // transform: {
+  //     //   type: 'groupBy',
+  //     //   config: {
+  //     //     dimension: 'Payment_Method',
+  //     //     condition: 'sum',
+  //     //     // value: "Sales_Amount"
+  //     //   },
+  //     // },
+  //     legend: {
+  //       open: true,
+  //       legendPosition: 'top-right',
+  //       legendOrientation: 'vertical',
+  //     },
+  //     tooltip: {
+  //       open: true,
+  //       text: '{x}的三分命中率是{y}',
+  //     },
+  //   },
+  //   {
+  //     name: 'BarVertical',
+  //     description: '不同支付方式的销售额趋势',
+  //     id: 'trrrr',
+  //     data: playoffData,
+  //     meta: {
+  //       width: '45%',
+  //       height: '45%',
+  //       left: '3%',
+  //       top: '50%',
+  //     },
+  //     x: 'PLAYER',
+  //     y: 'FG3_PCT',
+  //     interactionType: 'filter_01',
+  //     interactionKey: 'PLAYER',
+  //     allowedInteractionType: 'filter_02',
+  //     // legendBy: 'PLAYER',
+  //     // transform: {
+  //     //   type: 'groupBy',
+  //     //   config: {
+  //     //     dimension: 'Payment_Method',
+  //     //     condition: 'sum',
+  //     //     // value: "Sales_Amount"
+  //     //   },
+  //     // },
+  //     legend: {
+  //       open: true,
+  //       legendPosition: 'top-right',
+  //       legendOrientation: 'vertical',
+  //     },
+  //     tooltip: {
+  //       open: true,
+  //       text: '{x}的三分命中率是{y}',
+  //     },
+  //   },
+  //   {
+  //     name: 'Scatter',
+  //     description: '不同支付方式的销售额趋势',
+  //     id: 'trrrr',
+  //     data: playoffData30,
+  //     meta: {
+  //       width: '45%',
+  //       height: '45%',
+  //       left: '53%',
+  //       top: '50%',
+  //     },
+  //     x: 'FTA',
+  //     y: 'AST',
+  //     interactionType: 'filter_01',
+  //     interactionKey: 'FTA',
+  //     allowedInteractionType: 'filter_02',
+  //     // legendBy: 'PLAYER',
+  //     // transform: {
+  //     //   type: 'groupBy',
+  //     //   config: {
+  //     //     dimension: 'Payment_Method',
+  //     //     condition: 'sum',
+  //     //     // value: "Sales_Amount"
+  //     //   },
+  //     // },
+  //     // legend: {
+  //     //   open: true,
+  //     //   legendPosition: 'top-right',
+  //     //   legendOrientation: 'vertical',
+  //     // },
+  //     tooltip: {
+  //       open: true,
+  //       text: '{x}的三分命中率是{y}',
+  //     },
+  //   },
+  // ]
 
   if (curConfig) {
     const renderComponents = curConfig.map(
@@ -402,7 +400,7 @@ const MainView: React.FC<MainViewProps> = ({ offset }) => {
     return (
       <div>
         {renderComponents}
-        <div
+        {/* <div
           className="download"
           style={{
             position: 'absolute',
@@ -412,7 +410,7 @@ const MainView: React.FC<MainViewProps> = ({ offset }) => {
           }}
           onClick={handleDownload}>
           <DownloadOutlined />
-        </div>
+        </div> */}
       </div>
     )
   }

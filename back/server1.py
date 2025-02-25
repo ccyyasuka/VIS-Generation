@@ -34,31 +34,190 @@ client = OpenAI(
     # This is the default and can be omitted
     api_key=API_KEY
 )
-ROUND = 1
+ROUND = 0
 
 
 @app.route('/chat', methods=['POST'])
 def chat():
     global ROUND
+    if (MOCK):
+        time.sleep(20)
+        with open(r".\caseExperience\top_players_2023_24_regular.json", 'r', encoding='utf-8') as file:
+            data_dict = json.load(file)
+        graph_data = json.dumps(data_dict, ensure_ascii=False, indent=4)
+        reply = """The analysis of the top three-point shooters and their related abilities highlights the exceptional performance of 8 players during the 2023-24 NBA season.  These players not only excel in three-point shooting but also demonstrate strong overall abilities in various aspects of the game, contributing significantly to their teams' success."""
+        recommendation = ["""Consider analyzing the impact of these players' performances on their teams during the season.""",
+                          """Explore the correlation between three-point shooting and other abilities such as assists and rebounds.""", "Compare these players' performances with other top players in the league.", "FINISH"]
+        graphs_grammar = [
+            {
+                "name": 'BarVertical',
+                "description": '不同支付方式的销售额趋势',
+                "title": "Bar Chart of Players' Three Point Field Goal Percentage",
+                "id": '111',
+                "x": 'PLAYER',
+                "y": 'FG3_PCT',
+                "interactionType": 'filter_01',
+                "interactionKey": 'PLAYER',
+                "allowedInteractionType": 'filter_01',
+                "tooltip": {
+                    "open": True,
+                    "text": 'The three point field goal Percentage of {x} is {y}.',
+                },
+            },
+            {
+                "name": 'BarVertical',
+                "description": '不同支付方式的销售额趋势',
+                "title": "Bar Chart of Players' Assists",
+                "id": '222',
+                # "meta": {
+                #     "width": '45%',
+                #     "height": '45%',
+                #     "left": '3%',
+                #     "top": '3%',
+                # },
+                "x": 'PLAYER',
+                "y": 'AST',
+                "interactionType": 'filter_01',
+                "interactionKey": 'PLAYER',
+                "allowedInteractionType": 'filter_01',
+                "tooltip": {
+                    "open": True,
+                    "text": 'The assists of {x} is {y}.',
+                },
+            },
+
+            {
+                "name": 'BarVertical',
+                "description": '不同支付方式的销售额趋势',
+                "title": "Bar Chart of Players' Turnovers",
+                "id": '333',
+                # "meta": {
+                #     "width": '45%',
+                #     "height": '45%',
+                #     "left": '3%',
+                #     "top": '3%',
+                # },
+                "x": 'PLAYER',
+                "y": 'TOV',
+                "interactionType": 'filter_01',
+                "interactionKey": 'PLAYER',
+                "allowedInteractionType": 'filter_01',
+                "tooltip": {
+                    "open": True,
+                    "text": 'The turnovers of {x} is {y}.',
+                },
+            },
+            {
+                "name": 'BarVertical',
+                "description": '不同支付方式的销售额趋势',
+                "title": "Bar Chart of Players' Assist to Turnover Ratio",
+                "id": '444',
+                "meta": {
+                    "width": '45%',
+                    "height": '45%',
+                    "left": '3%',
+                    "top": '3%',
+                },
+                "x": 'PLAYER',
+                "y": 'AST_TOV',
+                "interactionType": 'filter_01',
+                "interactionKey": 'PLAYER',
+                "allowedInteractionType": 'filter_01',
+                "tooltip": {
+                    "open": True,
+                    "text": 'The assist to turnover ratio of {x} is {y}.',
+                },
+            },
+        ]
+        graph_layout = [{
+            "id": "111",
+            "meta": {
+                "width": '45%',
+                "height": '45%',
+                "left": '2%',
+                "top": '5%',
+            },
+        },
+            {
+            "id": "222",
+            "meta": {
+                "width": '45%',
+                "height": '45%',
+                "left": '55%',
+                "top": '5%',
+            },
+        },
+            {
+            "id": "333",
+            "meta": {
+                "width": '45%',
+                "height": '45%',
+                "left": '5%',
+                "top": '50%',
+            },
+        },
+            {
+            "id": "444",
+            "meta": {
+                "width": '45%',
+                "height": '45%',
+                "left": '55%',
+                "top": '50%',
+            },
+        },
+        ]
+
+        return jsonify({
+            'role': 'system',
+            'status': '成功',
+            'graph_data': graph_data,
+            'reply': reply,
+            'graphs_grammar': graphs_grammar,
+            "recommendation": recommendation,
+            "graph_layout": graph_layout
+        })
+        # if ROUND == 0:
+        #     ROUND += 1
+        #     return jsonify({
+        #         'role': 'system',
+        #         'status': '成功',
+        #         'graph_data': "[]",
+        #         'reply': "I have shown the history of the 10 players with the highest three-point percentage during the regular season.",
+        #         'graphs_grammar': "[]",
+        #         "recommendation": """["What is the most relevant to three-point shooting?", "What's the number of 3-pointers made?", "FINISH"]""",
+        #         "graph_layout": "[]"
+        #     })
+        # if ROUND == 1:
+        #     ROUND += 1
+        #     return jsonify({
+        #         'role': 'system',
+        #         'status': '成功',
+        #         'graph_data': "[]",
+        #         'reply': "The playoffs are more important for a team to win the championship, and I showed the three-point shooting performance of these players in the playoffs. And the three-point shooting of these players in the postseason in recent years has shown.",
+        #         'graphs_grammar': "[]",
+        #         "recommendation": """["What else did they do in the playoffs?", "What other offensive stats are worth exploring?", "FINISH"]""",
+        #         "graph_layout": "[]"
+        #     })
+        # if ROUND == 2:
+        #     ROUND += 1
+        #     return jsonify({
+        #         'role': 'system',
+        #         'status': '成功',
+        #         'graph_data': "[]",
+        #         'reply': "Creating fouls and assists are crucial offensive tactics in basketball games. I have displayed the performance of players with higher three-point shooting percentages using a scatter plot.",
+        #         'graphs_grammar': "[]",
+        #         "recommendation": """["What statistics are most associated with assists?", "What is their assist-to-turnover ratio?", "FINISH"]""",
+        #         "graph_layout": "[]"
+        #     })
+
     user_input = request.json.get("message", "")
     file_path = request.json.get("filePath", "")
     cur_graphs = request.json.get("graphConfig", "")
     if not isinstance(cur_graphs, str):
         cur_graphs = json.dumps(cur_graphs)
     file_path = os.path.join(UPLOAD_FOLDER, file_path)
-    if (MOCK):
-        time.sleep(1)
-        return jsonify({
-            'role': 'system',
-            'status': '成功',
-            'graph_data': "[]",
-            'reply': "reply",
-            'graphs_grammar': "[]",
-            "recommendation": """["a", "b", "c"]""",
-            "graph_layout": "[]"
-        })
-
-    res = stream_graph_updates(user_input, file_path, cur_graphs)
+    res = stream_graph_updates(
+        user_input+". Don't use Scatter plot. Preserve an existing view.", file_path, cur_graphs)
     content_dict = res
     graph_data = content_dict.get('middle_dataframe', [])
     reply = content_dict.get('reply', 'No reply provided')
@@ -132,27 +291,33 @@ def preview_file():
     if file.filename == '':
         return jsonify({'error': '没有选择文件'}), 400
 
-    try:
-        # 基于文件扩展名使用合适的读取方法
-        if file.filename.endswith('.csv'):
-            df = pd.read_csv(file)
-        elif file.filename.endswith(('.xls', '.xlsx')):
-            df = pd.read_excel(file)
-        else:
-            return jsonify({'error': '不支持的文件类型'}), 415
+    if file.filename.endswith('.csv'):
+        df = pd.read_csv(file, encoding='ANSI')
+    elif file.filename.endswith(('.xls', '.xlsx')):
+        df = pd.read_excel(file)
+    else:
+        return jsonify({'error': '不支持的文件类型'}), 415
 
-        # 将DataFrame转换为JSON列表
-        json_data = df.to_dict(orient='records')
+    # 将DataFrame转换为JSON列表
+    json_data = df.to_dict(orient='records')
 
-        return jsonify(json_data), 200
-
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+    return jsonify(json_data), 200
 
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
     global ROUND
+    # if (MOCK):
+    #     time.sleep(1)
+    #     return jsonify({
+    #         'role': 'system',
+    #         'status': '成功',
+    #         'graph_data': "[]",
+    #         'reply': "This dataset is an nba player performance dataset, what do you need?",
+    #         'graphs_grammar': [],
+    #         "recommendation": ["Explore the relationship between 3-point shooting percentage and free throw shooting percentage", "Explore the relationship between 3-point shooting percentage and rebounding", "FINISH"],
+    #         "graph_layout": []
+    #     })
     if 'file' not in request.files:
         return jsonify({'error': '没有文件'}), 400
 
@@ -162,7 +327,7 @@ def upload_file():
     file_path = request.form.get('filePath')
     file_path = os.path.join(UPLOAD_FOLDER, file_path)
     file.save(file_path)
-    user_input = "我上传了文件，请你首先先自行描述一下数据，挖掘一些潜在的insight"
+    user_input = "I have uploaded the file, please describe the data yourself, mine some potential insights, and visualise them. Please just use Scatter ang give me one plot."
     cur_graphs = "[]"
 
     res = stream_graph_updates(user_input, file_path, cur_graphs)
@@ -232,10 +397,10 @@ def upload_file():
         'role': 'system',
         'status': '成功',
         'graph_data': graph_data,
-        'reply': reply,
-        'graphs_grammar': graphs_grammar,
-        "recommendation": recommendation,
-        "graph_layout": converted_graph_layout
+        'reply': reply,  # string
+        'graphs_grammar': graphs_grammar,  # dict[]
+        "recommendation": recommendation,  # str[]
+        "graph_layout": converted_graph_layout  # dict[]
     })
 
 

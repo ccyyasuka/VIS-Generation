@@ -65,7 +65,6 @@ When a user provides data for you to analyze, you should always maintain a metho
 """
 
 
-
 # tag
 error_corrector_prompt_raw = """
 Your final output needs to serve as the input for a data interface, hence it must strictly follow the structure below:

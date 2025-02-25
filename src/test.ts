@@ -13,29 +13,28 @@ export interface plotState {
   interactionType: string
   interactionKey: string
   allowedInteractionType: string
-  tooltip?:{
-    open:boolean
-    text:string
+  tooltip?: {
+    open: boolean
+    text: string
   }
-  legand?:{
-    open:boolean//默认为true
-    legendPosition:'top-right'| 'bottom-left'|'top-left'|'bottom-right'//legand的摆放位置
-    legendOrientation:'horizontal' | 'vertical'//legand的摆放方向
+  legand?: {
+    open: boolean //默认为true
+    legendPosition: 'top-right' | 'bottom-left' | 'top-left' | 'bottom-right' //legand的摆放位置
+    legendOrientation: 'horizontal' | 'vertical' //legand的摆放方向
   }
   xAxis: {
-      label?: string,          // x轴名称
-      format?: string,  // x轴坐标格式化函数
-      angle?: number,          // x轴标签旋转角度
-      tickSize?: number,       // x轴刻度线大小
-    },
+    label?: string // x轴名称
+    format?: string // x轴坐标格式化函数
+    angle?: number // x轴标签旋转角度
+    tickSize?: number // x轴刻度线大小
+  }
   yAxis: {
-    label?: string,          // y轴名称
-    format?: string,  // y轴坐标格式化函数
-    angle?: number,          // y轴标签旋转角度
-    tickSize?: number,       // y轴刻度线大小
-    }
+    label?: string // y轴名称
+    format?: string // y轴坐标格式化函数
+    angle?: number // y轴标签旋转角度
+    tickSize?: number // y轴刻度线大小
+  }
 }
-
 
 let graph = {
   name: 'BarVertical',
@@ -51,14 +50,15 @@ let graph = {
   y: 'height', // 已存在，保持不变
   interactionType: 'filter', // 已存在，保持不变
   interactionKey: 'height', // 已存在，保持不变
-  allowedInteractionType: 'filter', // 原字段名为allowedinteractionType，这里调整以匹配接口
+  allowedInteractionType: 'filter', // 原字段名为allowedInteractionType，这里调整以匹配接口
   tooltip: {
     open: false, // 默认值，可以根据需求调整
-    text: '' // 默认值，可以根据需求调整
+    text: '', // 默认值，可以根据需求调整
   },
-  legand: { // 注意，plotState中定义的是"legand"而非"legend"
+  legand: {
+    // 注意，plotState中定义的是"legand"而非"legend"
     open: true, // 默认为true
-    legendPosition: 'top-right' // 默认值，可以根据需求调整
+    legendPosition: 'top-right', // 默认值，可以根据需求调整
   },
   xAxis: {
     open: true,
@@ -73,6 +73,5 @@ let graph = {
     format: '{y}%', // 可选，根据需求填写
     angle: 45, // 可选，默认角度为0度
     tickSize: 6, // 可选，默认刻度线大小
-  }
-};
-
+  },
+}

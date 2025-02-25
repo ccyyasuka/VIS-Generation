@@ -131,8 +131,8 @@ class State(MessagesState):
     inidata_insight: str
     reserve_charts: List[str]
     cur_insight: str
-    graph_layout:str
-    path:List[str]
+    graph_layout: str
+    path: List[str]
     graph_result: List[Graph_Result]
 
 
@@ -292,18 +292,18 @@ def graph_filter_node(state1: State) -> Command[Literal["supervisor"]]:
     state["path"].append("graph_filter")
     state["messages"].append(AIMessage(content=result["messages"]
                                        [-1].content, name="graph_filter"))
-    
 
-    reserve_charts_ids =  result['structured_response'].reserve_charts
-    
+    reserve_charts_ids = result['structured_response'].reserve_charts
+
     old_reserve_charts = state["reserve_charts"]
-    print("原始视图ids",old_reserve_charts)
-    if len(old_reserve_charts)!=0:
-        filtered_reserve_charts = [item for item in old_reserve_charts if item['id'] in reserve_charts_ids]
+    print("原始视图ids", old_reserve_charts)
+    if len(old_reserve_charts) != 0:
+        filtered_reserve_charts = [
+            item for item in old_reserve_charts if item['id'] in reserve_charts_ids]
         print("新视图ids", filtered_reserve_charts)
-        state["reserve_charts"]=filtered_reserve_charts
+        state["reserve_charts"] = filtered_reserve_charts
     else:
-        state["reserve_charts"]=[]   
+        state["reserve_charts"] = []
     with open(CACHESTATE, 'wb') as f:
         pickle.dump(state, f)
     return Command(
@@ -574,7 +574,7 @@ def df_static_node(state1: State) -> Command[Literal["supervisor"]]:
     state["path"].append("df_static")
     state["middle_dataframe_brief"] = middle_dataframe
     result = df_static_agent.invoke(state)
-    state["cur_insight"] = result['structured_response'].cur_insight
+    state["cur_insight"] += result['structured_response'].cur_insight
     state["messages"].append(AIMessage(content=result["messages"]
                                        [-1].content, name="df_static"))
     with open(CACHESTATE, 'wb') as f:
@@ -598,12 +598,12 @@ data_analysize_supervisor_node = make_supervisor_node(
 # build
 data_analysize_builder = StateGraph(State)
 data_analysize_builder.add_node("supervisor", data_analysize_supervisor_node)
-data_analysize_builder.add_node(
-    "data_transform_extract", data_transform_node_extract)
-data_analysize_builder.add_node(
-    "data_transform_groupby", data_transform_node_groupby)
-data_analysize_builder.add_node(
-    "data_transform_filter", data_transform_node_filter)
+# data_analysize_builder.add_node(
+#     "data_transform_extract", data_transform_node_extract)
+# data_analysize_builder.add_node(
+#     "data_transform_groupby", data_transform_node_groupby)
+# data_analysize_builder.add_node(
+#     "data_transform_filter", data_transform_node_filter)
 data_analysize_builder.add_node("data_transform1", data_transform_node)
 data_analysize_builder.add_node("graph_filter", graph_filter_node)
 data_analysize_builder.add_node("task_extension", task_extension_node)
@@ -647,7 +647,7 @@ def data_transform_node(state: State) -> Command[Literal["supervisor"]]:
     result = data_transform_agent.invoke(state1)
     is_data_transformed = "YES"
     state1["messages"].append(AIMessage(content=result["messages"]
-                                       [-1].content, name="data_transform"))
+                                        [-1].content, name="data_transform"))
     with open(CACHESTATE, 'wb') as f:
         pickle.dump(state1, f)
     return Command(
@@ -701,7 +701,7 @@ def graph_grammar_node(state: State) -> Command[Literal["supervisor"]]:
     result = graph_grammar_agent.invoke(state1)
     state1["cur_graph_grammar"] = result['structured_response'].cur_graph_grammar
     state1["messages"].append(AIMessage(content=result["messages"]
-                                       [-1].content, name="graph_grammar"))
+                                        [-1].content, name="graph_grammar"))
     with open(CACHESTATE, 'wb') as f:
         pickle.dump(state1, f)
     return Command(
@@ -797,9 +797,10 @@ def call_diagram_writing_team(state: State) -> Command[Literal["supervisor"]]:
 #     graphs_grammar: List[Graph_Result]
 #     recommendation:List[str]
 class Graph_Result_Wrapper(BaseModel):
-    reply:str
+    reply: str
     graphs_grammar: List
-    recommendation:List[str]
+    recommendation: List[str]
+
 
 error_corrector_agent = create_react_agent(
     llm,
@@ -816,14 +817,14 @@ def call_error_corrector_node(state: State) -> Command[Literal["supervisor"]]:
     global has_error
     print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
     print("进入纠错")
-    has_error=True
+    has_error = True
     with open(CACHESTATE, 'rb') as f:
         state1 = pickle.load(f)
     result = error_corrector_agent.invoke(filter_dict(state1))
-    state1["graph_result"] = {"reply":result['structured_response'].reply,
-                              "graphs_grammar":result['structured_response'].graphs_grammar,
-                              "recommendation":result['structured_response'].recommendation}
-    
+    state1["graph_result"] = {"reply": result['structured_response'].reply,
+                              "graphs_grammar": result['structured_response'].graphs_grammar,
+                              "recommendation": result['structured_response'].recommendation}
+
     state1["messages"].append(AIMessage(
         content=result["messages"][-1].content, name="error_corrector"
     ))
@@ -833,12 +834,12 @@ def call_error_corrector_node(state: State) -> Command[Literal["supervisor"]]:
     for item in graphs_plus_id["graphs_grammar"]:
         if isinstance(item, dict):  # 确保当前项是字典
             item['id'] = str(uuid.uuid4().hex)[:13]
-    state1["graph_result"]=json.dumps(graphs_plus_id)
-    
-    
-    result = [{"id": item["id"], "description": item["description"]} for item in graphs_plus_id["graphs_grammar"] if isinstance(item, dict) and "id" in item and "description" in item]
+    state1["graph_result"] = json.dumps(graphs_plus_id)
+
+    result = [{"id": item["id"], "description": item["description"]}
+              for item in graphs_plus_id["graphs_grammar"] if isinstance(item, dict) and "id" in item and "description" in item]
     reserve_charts = state["reserve_charts"]+result
-    state1["reserve_charts"]=reserve_charts
+    state1["reserve_charts"] = reserve_charts
     with open(CACHESTATE, 'wb') as f:
         pickle.dump(state1, f)
     return Command(
@@ -851,8 +852,11 @@ class Layout_Result(BaseModel):
     id: str
     description: str
     meta: ChartMeta
+
+
 class Layout_Result_Wrapper(BaseModel):
-    graph_layout:List[Layout_Result]
+    graph_layout: List[Layout_Result]
+
 
 layout_agent = create_react_agent(
     llm,
@@ -869,13 +873,13 @@ def call_layout_node(state: State) -> Command[Literal["supervisor"]]:
     global has_layout
     print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
     print("进入layout")
-    has_layout=True
+    has_layout = True
     with open(CACHESTATE, 'rb') as f:
         state1 = pickle.load(f)
     result = layout_agent.invoke(filter_dict(state1))
     graph_layout_str = result['structured_response'].graph_layout
     state1["path"].append("layout_team")
-    state1['graph_layout']=graph_layout_str
+    state1['graph_layout'] = graph_layout_str
     state1["messages"].append(AIMessage(
         content=result["messages"][-1].content, name="layout_team"
     ))
@@ -918,12 +922,12 @@ def stream_graph_updates(user_input: str, path: str, cur_graphs):
         # 将整个df转换为字符串格式并写入到"./cache/cache.txt"文件中
         df.to_json(CACHE, orient='records', indent=4)  # 'orient' 参数可以根据需要调整
 
-        # 将df的前10行转换为JSON格式并写入到CACHEBRIEF文件中
-        df.head(10).to_json(CACHEBRIEF, orient='records',
+        # 将df的前3行转换为JSON格式并写入到CACHEBRIEF文件中
+        df.head(3).to_json(CACHEBRIEF, orient='records',
                             indent=4)  # 'orient' 参数可以根据需要调整
     else:
         print("未能加载数据，请检查文件路径是否正确。")
-    df_brief = df.head(10)
+    df_brief = df.head(3)
     state["dataframe"] = df.to_json(orient='records')
     state["middle_dataframe"] = df.to_json(orient='records')
     state["dataframe_brief"] = df_brief.to_json(orient='records')
@@ -935,12 +939,13 @@ def stream_graph_updates(user_input: str, path: str, cur_graphs):
     state["graph_result"] = "None"
     state["already_graphs"] = "None"
     state["cur_insight"] = "None"
-    state["graph_layout"]="None"
-    state["path"]=[]
+    state["graph_layout"] = "None"
+    state["path"] = []
 
     cur_graphs = json.loads(cur_graphs)
     # 提取所有的id并保存到列表中
-    reserve_charts = [{"id": item['id'], "description":item['description']} for item in cur_graphs]
+    reserve_charts = [
+        {"id": item['id'], "description":item['description']} for item in cur_graphs]
     state["reserve_charts"] = reserve_charts
     with open(CACHESTATE, 'wb') as f:
         pickle.dump(state, f)
@@ -980,12 +985,12 @@ def stream_graph_updates(user_input: str, path: str, cur_graphs):
     # result = json.loads(cleaned_json)
     # result["analyze_data"] = state["middle_dataframe"]
     # json_str = json.dumps(result, ensure_ascii=False, indent=4)
-    graph_result=json.loads(state1['graph_result'])
+    graph_result = json.loads(state1['graph_result'])
     result = {"middle_dataframe": middle_dataframe,
-              "reply":graph_result["reply"],
+              "reply": graph_result["reply"],
               "graphs_grammar": graph_result["graphs_grammar"],
               "recommendation": graph_result["recommendation"],
-              "graph_layout":state1["graph_layout"]}
+              "graph_layout": state1["graph_layout"]}
     # json_str = json.dumps(result, ensure_ascii=False, indent=4)
     return result
     return None

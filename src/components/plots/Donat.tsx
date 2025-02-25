@@ -178,7 +178,7 @@ interface PieProps {
   y: string
   interactionType: string
   interactionKey: string
-  allowedinteractionType: string
+  allowedInteractionType: string
   groupBy: string | null
   transform?: {
     type: string
@@ -215,7 +215,7 @@ const Pie: React.FC<PieProps> = ({
   y,
   interactionType,
   interactionKey,
-  allowedinteractionType,
+  allowedInteractionType,
   groupBy = null,
   transform,
   xAxis,
@@ -260,7 +260,7 @@ const Pie: React.FC<PieProps> = ({
     if (curMessage === undefined) {
       return
     }
-    if (!allowedinteractionType) {
+    if (!allowedInteractionType) {
       return
     }
     if (curMessage.interactionKey !== undefined) {
@@ -272,7 +272,7 @@ const Pie: React.FC<PieProps> = ({
       }
     }
 
-    if (curMessage.interactionType === allowedinteractionType) {
+    if (curMessage.interactionType === allowedInteractionType) {
       // console.log("debug-data-value", message)
       d3.select(chartRef.current).selectAll('.arcs').style('opacity', 0.3)
       // 然后找到与message相等的点，将其透明度设置为1
@@ -336,7 +336,7 @@ const DonatWithWrapper: React.FC<figWrapperProps & PieProps> = ({
   y,
   interactionType,
   interactionKey,
-  allowedinteractionType,
+  allowedInteractionType,
   // allowedinteractionKey
   groupBy = null,
   transform,
@@ -371,7 +371,7 @@ const DonatWithWrapper: React.FC<figWrapperProps & PieProps> = ({
         y={y}
         interactionType={interactionType}
         interactionKey={interactionKey}
-        allowedinteractionType={allowedinteractionType}
+        allowedInteractionType={allowedInteractionType}
         // allowedinteractionKey={allowedinteractionKey}
         groupBy={groupBy}
         // 1

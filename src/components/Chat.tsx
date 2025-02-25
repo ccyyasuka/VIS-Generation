@@ -24,13 +24,12 @@ function Chat() {
   }
   const handleSend = () => {
     if (inputValue.trim() === '') return
-    chatContent[chatContent.length-1].recommendation=[]
-    dispatch(updateKV({
-      chatContent: chatContent
-    }))
+    // chatContent[chatContent.length-1].recommendation=[]
+    // dispatch(updateKV({
+    //   chatContent: chatContent
+    // }))
     dispatch(sendChatMessage(inputValue))
-    
-    
+
     setInputValue('') // Clear the input field after sending
     scrollToBottom()
   }
@@ -40,7 +39,7 @@ function Chat() {
 
   return (
     <div className={style.main}>
-      <div className={style.head}>对话框</div>
+      <div className={style.head}>Chat View</div>
       <div className={style.talkFrame} ref={talkFrameRef}>
         {chatContent.map(
           (
@@ -55,35 +54,55 @@ function Chat() {
               <div
                 key={index}
                 className={style.talk}
-                style={{ marginLeft: 'auto' }}>
-                <Card style={{ width: 200 }}>
-                  <p>{curContent.summary}</p>
-                </Card>
+                style={{
+                  marginLeft: 'auto',
+                  width: '100%',
+                  justifyContent: 'flex-end',
+                }}>
+                <div className={style.chatCard + ' ' + style.chatCardUser}>
+                  {curContent.summary}
+                </div>
                 <Avatar src="https://api.dicebear.com/9.x/adventurer/svg?seed=Kiki" />
               </div>
             ) : (
               <div
                 key={index}
                 className={style.talk}
-                style={{ marginRight: 'auto' }}>
+                style={{
+                  marginRight: 'auto',
+                  width: '100%',
+                  justifyContent: 'flex-start',
+                }}>
                 <Avatar src="https://robohash.org/yixingzhang" />
                 <div className={style.cardsWrapper}>
-                  <Card style={{ width: 200 }}>
+                  {/* <Card style={{ width: 200 }}>
                     <p>{curContent.summary}</p>
-                  </Card>
-                  {curContent.recommendation && (
-                    <div style={{ marginTop: '10px' }}>
-                      {curContent.recommendation.map((recom, i) => (
-                        <Card
-                          onClick={() => setInputValue(recom)}
-                          hoverable={true}
-                          key={i}
-                          style={{ width: 100, marginTop: '5px' }}>
-                          <p>{recom}</p>
-                        </Card>
-                      ))}
-                    </div>
-                  )}
+                  </Card> */}
+                  <div className={style.chatCard + ' ' + style.chatCardBot}>
+                    {curContent.summary}
+                  </div>
+                  {curContent.recommendation &&
+                    curContent.recommendation.length > 0 && (
+                      <div>
+                        {curContent.recommendation.map((recom, i) => (
+                          <div
+                            className={
+                              style.chatCard + ' ' + style.chatCardRecom
+                            }
+                            onClick={() => setInputValue(recom)}
+                            key={i}>
+                            {recom}
+                          </div>
+                          // <Card
+                          //   onClick={() => setInputValue(recom)}
+                          //   hoverable={true}
+                          //   key={i}
+                          //   style={{ width: 100, marginTop: '5px' }}>
+                          //   <p>{recom}</p>
+                          // </Card>
+                        ))}
+                      </div>
+                    )}
                 </div>
               </div>
             )
@@ -96,7 +115,7 @@ function Chat() {
           onPressEnter={handleSend}
         />
         <Button type="primary" onClick={handleSend} loading={loading}>
-          发送
+          Send
         </Button>
       </div>
     </div>

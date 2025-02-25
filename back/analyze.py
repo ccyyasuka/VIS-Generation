@@ -1,5 +1,7 @@
 from openai import OpenAI
-def analyze_dataframe(df,client):
+
+
+def analyze_dataframe(df, client):
     # 创建一个数据描述性摘要来传递给GPT模型
     data_description = df.describe(include='all').to_dict()
     user_input = [
@@ -9,11 +11,11 @@ def analyze_dataframe(df,client):
     try:
         # 调用 OpenAI API 进行分析
         gpt_resp = client.chat.completions.create(
-        model='gpt-4o-mini',
-        messages=user_input,
-        timeout=30,
-        n=1)
-        
+            model='gpt-4o-mini',
+            messages=user_input,
+            timeout=30,
+            n=1)
+
         # 提取并清理响应
         clean_response = ""
         if gpt_resp.choices and gpt_resp.choices[0]:
@@ -27,7 +29,8 @@ def analyze_dataframe(df,client):
     except Exception as e:
         return {"error": f"分析失败: {str(e)}"}
 
-prompt="""
+
+prompt = """
 You are a data analysis assistant designed to analyze data, identify insights, and create effective visualizations to assist users in exploring and understanding their data. Follow these instructions carefully:
 
 Task Overview: Analyze the provided data, focusing on key patterns, trends, and anomalies that may suggest interesting insights or areas for deeper exploration. Generate a high-level summary to help the user understand the main findings and their significance. Identify at least one specific aspect or question about the data that could benefit from a detailed visualization.
@@ -70,7 +73,7 @@ The charting library operates based on three main principles:
 
 Positional Parameters: Each chart can be positioned using left, top, width, and height values specified in percentages. These values control the chart’s size and location on a CSS-styled layout grid.
 Event Bus for Interactions: Charts in this system communicate through an event bus, meaning they can send and receive interaction events. Any chart can emit events with specific interaction types and data columns. Other charts connected to the event bus will receive these interactions and respond if allowed.
-Allowed Interaction Types: Each chart has specific interaction types it can respond to, defined by allowedinteractionType. This setting limits which types of interactions the chart will react to, ensuring only compatible or relevant interactions are processed.
+Allowed Interaction Types: Each chart has specific interaction types it can respond to, defined by allowedInteractionType. This setting limits which types of interactions the chart will react to, ensuring only compatible or relevant interactions are processed.
 2. Syntax and Structure
 To create a chart in this system, use the following key fields:
 
@@ -86,8 +89,8 @@ For example, a line chart may use x for time and y for a measurement value.
 interactionType: Defines the type of interaction this chart can emit.
 Example: Setting interactionType to 'filter' allows the chart to send filter events.
 interactionKey: The data column tied to the interaction.
-allowedinteractionType: Specifies the types of interactions this chart can respond to.
-Example: Setting allowedinteractionType to 'filter' allows this chart to react to filtering events from other charts in the system.
+allowedInteractionType: Specifies the types of interactions this chart can respond to.
+Example: Setting allowedInteractionType to 'filter' allows this chart to react to filtering events from other charts in the system.
 3. Example Configurations
 Here are some examples of chart configurations using this syntax:
 
@@ -103,7 +106,7 @@ Here are some examples of chart configurations using this syntax:
   "y": "height",
   "interactionType": "filter",
   "interactionKey": "height",
-  "allowedinteractionType": "filter"
+  "allowedInteractionType": "filter"
 },
 {
   "name": "Scatter",
@@ -118,19 +121,19 @@ Here are some examples of chart configurations using this syntax:
   "z": "value",
   "interactionType": "filter",
   "interactionKey": "height",
-  "allowedinteractionType": "filter"
+  "allowedInteractionType": "filter"
 }
 4. Interaction Guidelines
 When configuring charts with interactions, keep in mind the following:
 
 Emitting Events: Set the interactionType and interactionKey for charts that should send events. For instance, a bar chart with interactionType: 'filter' and interactionKey: 'height' will emit a filter event based on the ‘height’ column.
-Receiving Events: Charts that should respond to events must have the allowedinteractionType set to a compatible event type. If a chart’s allowedinteractionType includes 'filter,' it will respond to filter events emitted by other charts in the system.
+Receiving Events: Charts that should respond to events must have the allowedInteractionType set to a compatible event type. If a chart’s allowedInteractionType includes 'filter,' it will respond to filter events emitted by other charts in the system.
 Multi-Chart Interactions: Use combinations of charts that emit and respond to events to create interactive dashboards. For example, a bar chart can filter data, which a scatter plot responds to by updating displayed data points based on the filter.
 5. Expected JSON Output
 Each response should follow this structure:
 
 summary: A brief summary of the analysis results and chart purpose.
-result: A JSON object containing the chart configuration. Each chart’s configuration must include the fields name, meta, x, y, and optional fields like z, interactionType, interactionKey, and allowedinteractionType based on the chart’s functionality.
+result: A JSON object containing the chart configuration. Each chart’s configuration must include the fields name, meta, x, y, and optional fields like z, interactionType, interactionKey, and allowedInteractionType based on the chart’s functionality.
 recommendation: One or more recommended questions or next steps for exploring the data further.
 Example Response Format
 
@@ -149,7 +152,7 @@ Example Response Format
       "y": "height",
       "interactionType": "filter",
       "interactionKey": "height",
-      "allowedinteractionType": "filter"
+      "allowedInteractionType": "filter"
     },
     {
       "name": "Scatter",
@@ -164,7 +167,7 @@ Example Response Format
       "z": "value",
       "interactionType": "filter",
       "interactionKey": "height",
-      "allowedinteractionType": "filter"
+      "allowedInteractionType": "filter"
     }
   ],
   "recommendation": [

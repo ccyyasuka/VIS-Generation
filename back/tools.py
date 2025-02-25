@@ -8,8 +8,8 @@ from langchain_core.messages import ToolMessage
 from langchain_core.tools.base import InjectedToolCallId
 from langchain_community.tools.tavily_search import TavilySearchResults
 import time
-CACHE="./cache/cache.json"
-CACHEBRIEF="./cache/cache_brief.json"
+CACHE = "./cache/cache.json"
+CACHEBRIEF = "./cache/cache_brief.json"
 tavily_tool = TavilySearchResults(max_results=5)
 
 
@@ -35,7 +35,7 @@ def get_column_names(state: Annotated[dict, InjectedState],
         dataframe = pd.read_json(middle_dataframe)
     # print(dataframe.columns.tolist())
     # 返回所有列名
-    
+
     return dataframe.columns.tolist()
 
 
@@ -52,7 +52,6 @@ def show_dataframe_head(state: Annotated[dict, InjectedState], analysis_type: st
     """
     print("00000000000000000000000000show_dataframe_head")
     # print(state)
-    
 
     # 根据analysis_type从state中读取DataFrame
     if analysis_type == "initial":
@@ -90,7 +89,7 @@ def calculate_statistics(
         Dict[str, float]: A dictionary of calculated statistics with method names as keys and computed values as float values.
     """
     print("00000000000000000000000000calculate_statistics")
-    
+
     if analysis_type == "initial":
         dataframe = pd.read_json(state["dataframe"])
     else:
@@ -155,7 +154,7 @@ def calculate_pairwise_statistics(
         Dict[str, float]: A dictionary of calculated statistics with method names as keys and computed values as float values or other relevant data types.
     """
     print("00000000000000000000000000calculate_pairwise_statistics")
-    
+
     if analysis_type == "initial":
         dataframe = pd.read_json(state["dataframe"])
     else:
@@ -221,7 +220,7 @@ def remove_nans(
 
     Args:
         tool_call_id: Annotated[str, InjectedToolCallId]: tool call id.
-        
+
         column_names (List[str]): A list of column names to check for NaNs and remove rows accordingly.
 
     Returns:
@@ -233,7 +232,7 @@ def remove_nans(
     # else:
     #     dataframe = pd.read_json(state["middle_dataframe"])
     print("00000000000000000000000000remove_nans")
-    
+
     with open(CACHE, "r") as file:
         middle_dataframe = file.read()
     dataframe = pd.read_json(middle_dataframe)
@@ -253,19 +252,19 @@ def remove_nans(
         # 将整个df转换为字符串格式并写入到"./cache/cache.txt"文件中
         with open(CACHE, "w") as file:
             file.write(dataframe.to_string(index=False))
-            
+
         # 将df的前10行转换为字符串格式并写入到"./cache/cache_brief.txt"文件中
         with open(CACHEBRIEF, "w") as file:
-            file.write(dataframe.head(10).to_string(index=False))
+            file.write(dataframe.head(3).to_string(index=False))
 
     print("写回成功")
     return {
-            # update the state keys
-            # "middle_dataframe": dataframe.to_json(orient='records'),
-            # "middle_dataframe_brief": df_brief.to_json(orient='records'),
-            # update the message history
-            "messages": [ToolMessage("Null value in dataframe successfully removed", tool_call_id=tool_call_id)]
-        }
+        # update the state keys
+        # "middle_dataframe": dataframe.to_json(orient='records'),
+        # "middle_dataframe_brief": df_brief.to_json(orient='records'),
+        # update the message history
+        "messages": [ToolMessage("Null value in dataframe successfully removed", tool_call_id=tool_call_id)]
+    }
     # 将清理后的DataFrame转换回JSON字符串并更新到state
     # return Command(
     #     update={
@@ -281,7 +280,7 @@ def remove_nans(
 @tool
 def extract_columns(
     tool_call_id: Annotated[str, InjectedToolCallId],
-    
+
     # analysis_type: str,
     column_names: List[str]
 ) -> Dict[str, str]:
@@ -290,7 +289,7 @@ def extract_columns(
 
     Args:
         tool_call_id: Annotated[str, InjectedToolCallId]: tool call id.
-        
+
         column_names (List[str]): A list of column names to extract from the DataFrame.
 
     Returns:
@@ -302,7 +301,7 @@ def extract_columns(
     # else:
     #     dataframe = pd.read_json(state["middle_dataframe"])
     print("00000000000000000000000000extract_columns")
-    
+
     # with open(CACHE, "r") as file:
     #     middle_dataframe = file.read()
     dataframe = pd.read_json(CACHE)
@@ -315,23 +314,23 @@ def extract_columns(
 
     # 提取指定的列
     dataframe = dataframe[column_names]
-    df_brief = dataframe.head(10)
+    df_brief = dataframe.head(3)
     # 将提取后的DataFrame转换回JSON字符串并更新到state
     if dataframe is not None:
         # 将整个df转换为字符串格式并写入到"./cache/cache.txt"文件中
-        dataframe.to_json(CACHE, orient='records', indent=4)  # 'orient' 参数可以根据需要调整
-    
+        dataframe.to_json(CACHE, orient='records',
+                          indent=4)  # 'orient' 参数可以根据需要调整
+
         # 将df的前10行转换为JSON格式并写入到CACHEBRIEF文件中
-        dataframe.head(10).to_json(CACHEBRIEF, orient='records', indent=4) 
+        dataframe.head(3).to_json(CACHEBRIEF, orient='records', indent=4)
     print("写回成功")
     return {
-            # update the state keys
-            # "middle_dataframe": extracted_dataframe.to_json(orient='records'),
-            # "middle_dataframe_brief": df_brief.to_json(orient='records'),
-            # update the message history
-            "messages": [ToolMessage("Columns successfully extracted from dataframe", tool_call_id=tool_call_id)]
-        }
-    
+        # update the state keys
+        # "middle_dataframe": extracted_dataframe.to_json(orient='records'),
+        # "middle_dataframe_brief": df_brief.to_json(orient='records'),
+        # update the message history
+        "messages": [ToolMessage("Columns successfully extracted from dataframe", tool_call_id=tool_call_id)]
+    }
 
 
 @tool
@@ -360,7 +359,7 @@ def groupby_column(
     # else:
     #     dataframe = pd.read_json(state["middle_dataframe"])
     print("00000000000000000000000000groupby_column")
-    
+
     dataframe = pd.read_json(CACHE)
     # 检查指定的列是否存在
     if column_name not in dataframe.columns:
@@ -372,22 +371,23 @@ def groupby_column(
     # 对过滤后的DataFrame进行分组和聚合操作
     dataframe = filtered_dataframe.groupby(
         column_name).agg(aggregation).reset_index()
-    df_brief = dataframe.head(10)
+    df_brief = dataframe.head(3)
     if dataframe is not None:
         # 将整个df转换为字符串格式并写入到"./cache/cache.txt"文件中
-        dataframe.to_json(CACHE, orient='records', indent=4)  # 'orient' 参数可以根据需要调整
-    
+        dataframe.to_json(CACHE, orient='records',
+                          indent=4)  # 'orient' 参数可以根据需要调整
+
         # 将df的前10行转换为JSON格式并写入到CACHEBRIEF文件中
-        dataframe.head(10).to_json(CACHEBRIEF, orient='records', indent=4) 
+        dataframe.head(3).to_json(CACHEBRIEF, orient='records', indent=4)
     # 将分组后的DataFrame转换回JSON字符串并更新到state
     print("写回成功")
     return {
-            # update the state keys
-            # "middle_dataframe": grouped_dataframe.to_json(orient='records'),
-            # "middle_dataframe_brief": df_brief.to_json(orient='records'),
-            # update the message history
-            "messages": [ToolMessage("DataFrame successfully grouped and aggregated", tool_call_id=tool_call_id)]
-        }
+        # update the state keys
+        # "middle_dataframe": grouped_dataframe.to_json(orient='records'),
+        # "middle_dataframe_brief": df_brief.to_json(orient='records'),
+        # update the message history
+        "messages": [ToolMessage("DataFrame successfully grouped and aggregated", tool_call_id=tool_call_id)]
+    }
 
 
 # @tool
@@ -412,7 +412,7 @@ def filter_dataframe(
     # else:
     #     dataframe = pd.read_json(state["middle_dataframe"])
     print("00000000000000000000000000filter_dataframe")
-    
+
     # with open(CACHE, "r") as file:
     #     middle_dataframe = file.read()
     dataframe = pd.read_json(CACHE)
@@ -424,22 +424,23 @@ def filter_dataframe(
             "status": "error",
             "message": f"Error during filtering: {str(e)}"
         }
-    df_brief = dataframe.head(10)
+    df_brief = dataframe.head(3)
     if dataframe is not None:
         # 将整个df转换为字符串格式并写入到"./cache/cache.txt"文件中
-        dataframe.to_json(CACHE, orient='records', indent=4)  # 'orient' 参数可以根据需要调整
-    
+        dataframe.to_json(CACHE, orient='records',
+                          indent=4)  # 'orient' 参数可以根据需要调整
+
         # 将df的前10行转换为JSON格式并写入到CACHEBRIEF文件中
-        dataframe.head(10).to_json(CACHEBRIEF, orient='records', indent=4) 
+        dataframe.head(3).to_json(CACHEBRIEF, orient='records', indent=4)
     # 将过滤后的DataFrame转换回JSON字符串并更新到state
     print("写回成功")
     return {
-            # 更新状态键值
-            # "middle_dataframe": filtered_dataframe.to_json(orient='records'),
-            # "middle_dataframe_brief": df_brief.to_json(orient='records'),
-            # 更新消息历史
-            "messages": [ToolMessage("DataFrame successfully filtered", tool_call_id=tool_call_id)]
-        }
+        # 更新状态键值
+        # "middle_dataframe": filtered_dataframe.to_json(orient='records'),
+        # "middle_dataframe_brief": df_brief.to_json(orient='records'),
+        # 更新消息历史
+        "messages": [ToolMessage("DataFrame successfully filtered", tool_call_id=tool_call_id)]
+    }
     # return Command(
     #     update={
     #         # 更新状态键值
@@ -478,8 +479,7 @@ def rename_columns(
     with open(CACHE, "r") as file:
         middle_dataframe = file.read()
     dataframe = pd.read_json(middle_dataframe)
-    
-    
+
     # 检查所有待重命名的列是否存在
     for old_name in rename_mapping.keys():
         if old_name not in dataframe.columns:
@@ -487,24 +487,24 @@ def rename_columns(
 
     # 重命名DataFrame中的列
     dataframe.rename(columns=rename_mapping, inplace=True)
-    df_brief = dataframe.head(10)
+    df_brief = dataframe.head(3)
     # 将更新后的DataFrame转换回JSON字符串并更新到state
     if dataframe is not None:
         # 将整个df转换为字符串格式并写入到"./cache/cache.txt"文件中
         with open(CACHE, "w") as file:
             file.write(dataframe.to_string(index=False))
-            
+
         # 将df的前10行转换为字符串格式并写入到"./cache/cache_brief.txt"文件中
         with open(CACHEBRIEF, "w") as file:
-            file.write(dataframe.head(10).to_string(index=False))
+            file.write(dataframe.head(3).to_string(index=False))
     print("写回成功")
     return {
-            # 更新状态键值
-            # "middle_dataframe": dataframe.to_json(orient='records'),
-            # "middle_dataframe_brief": df_brief.to_json(orient='records'),
-            # 更新消息历史
-            "messages": [ToolMessage("DataFrame successfully updated with renamed columns", tool_call_id=tool_call_id)]
-        }
+        # 更新状态键值
+        # "middle_dataframe": dataframe.to_json(orient='records'),
+        # "middle_dataframe_brief": df_brief.to_json(orient='records'),
+        # 更新消息历史
+        "messages": [ToolMessage("DataFrame successfully updated with renamed columns", tool_call_id=tool_call_id)]
+    }
 
 
 # @tool
@@ -535,7 +535,7 @@ def rename_columns(
 #     #     dataframe = pd.read_json(state["middle_dataframe"])
 #     print("00000000000000000000000000sort_by_column")
 #     dataframe = pd.read_json(state["middle_dataframe"])
-#     
+#
 #     # 检查指定的列是否存在
 #     if column_name not in dataframe.columns:
 #         raise ValueError(f"Column {column_name} not found in the DataFrame.")
@@ -543,7 +543,7 @@ def rename_columns(
 #     # 根据指定列名对DataFrame进行排序
 #     sorted_dataframe = dataframe.sort_values(
 #         by=column_name, ascending=ascending).reset_index(drop=True)
-#     df_brief = sorted_dataframe.head(10)
+#     df_brief = sorted_dataframe.head(3)
 
 #     return {
 #             # 更新状态键值
@@ -577,4 +577,4 @@ if __name__ == "__main__":
     #     ["pearson", "covariance", "spearman",
     #      "kendall", "correlation", "covariance_matrix"]
     # )
-    filter_dataframe("aaa","Age < 25")
+    filter_dataframe("aaa", "Age < 25")

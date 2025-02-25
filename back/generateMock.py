@@ -18,7 +18,7 @@ ini_config = [
         "y": "height",
         "interactionType": "filter",
         "interactionKey": "height",
-        "allowedinteractionType": "filter"
+        "allowedInteractionType": "filter"
     },
     {
         "name": "BarVertical",
@@ -32,7 +32,7 @@ ini_config = [
         "y": "height",
         "interactionType": "filter",
         "interactionKey": "height",
-        "allowedinteractionType": "filter"
+        "allowedInteractionType": "filter"
     },
     {
         "name": "Donat",
@@ -46,7 +46,7 @@ ini_config = [
         "y": "height",
         "interactionType": "filter",
         "interactionKey": "height",
-        "allowedinteractionType": "filter"
+        "allowedInteractionType": "filter"
     },
     {
         "name": "Line",
@@ -60,7 +60,7 @@ ini_config = [
         "y": "height",
         "interactionType": "filter",
         "interactionKey": "height",
-        "allowedinteractionType": "filter"
+        "allowedInteractionType": "filter"
     },
     {
         "name": "Scatter",
@@ -75,7 +75,7 @@ ini_config = [
         "z": "value",
         "interactionType": "filter",
         "interactionKey": "height",
-        "allowedinteractionType": "filter"
+        "allowedInteractionType": "filter"
     }
 ]
 config0 = [
@@ -91,7 +91,7 @@ config0 = [
         "y": "height",
         "interactionType": "filter",
         "interactionKey": "height",
-        "allowedinteractionType": "filter"
+        "allowedInteractionType": "filter"
     },
     {
         "name": "Line",
@@ -105,7 +105,7 @@ config0 = [
         "y": "height",
         "interactionType": "filter",
         "interactionKey": "height",
-        "allowedinteractionType": "filter"
+        "allowedInteractionType": "filter"
     }, {
         "name": "Scatter",
         "meta": {
@@ -119,7 +119,7 @@ config0 = [
         "z": "value",
         "interactionType": "filter",
         "interactionKey": "height",
-        "allowedinteractionType": "filter"
+        "allowedInteractionType": "filter"
     }
 ]
 config1 = [
@@ -135,7 +135,7 @@ config1 = [
         "y": "height",
         "interactionType": "filter",
         "interactionKey": "height",
-        "allowedinteractionType": "filter"
+        "allowedInteractionType": "filter"
     },
     {
         "name": "Scatter",
@@ -150,7 +150,7 @@ config1 = [
         "z": "value",
         "interactionType": "filter",
         "interactionKey": "height",
-        "allowedinteractionType": "filter"
+        "allowedInteractionType": "filter"
     },
     {
         "name": "BarVertical",
@@ -164,7 +164,7 @@ config1 = [
         "y": "height",
         "interactionType": "filter",
         "interactionKey": "height",
-        "allowedinteractionType": "filter"
+        "allowedInteractionType": "filter"
     },
 ]
 config2 = [
@@ -181,13 +181,13 @@ config2 = [
         "z": "value",
         "interactionType": "filter",
         "interactionKey": "height",
-        "allowedinteractionType": "filter"
+        "allowedInteractionType": "filter"
     },
 ]
 
 
 def generate_mock(round):
-    time.sleep(4+random.randint(100,300)/100)
+    time.sleep(4+random.randint(100, 300)/100)
     if round == 1:
         return {
             'summary': '这是一个时序数据，展示了2019年至2024年各年份的高度、重量和数值的变化趋势。高度和重量在特定年份间变化显著，例如2021年和2024年均有较大幅度调整，可能指向某种趋势或周期性因素的影响。',
