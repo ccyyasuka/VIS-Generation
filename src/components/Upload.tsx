@@ -56,7 +56,7 @@ function FileUpload() {
     reader.onload = (event) => {
       try {
         const content = JSON.parse(event.target?.result as string)
-        debugger
+        // debugger
         dispatch(
           updateKV({
             config: content.config,

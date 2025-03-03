@@ -465,9 +465,6 @@ const Bar: React.FC<BarProps> = ({
     if (curMessage === undefined) {
       return
     }
-    if (!allowedInteractionType) {
-      return
-    }
     if (curMessage.interactionKey !== undefined) {
       if (
         !data.length ||
@@ -477,7 +474,10 @@ const Bar: React.FC<BarProps> = ({
       }
     }
 
-    if (curMessage.interactionType === allowedInteractionType) {
+    if (
+      !allowedInteractionType ||
+      curMessage.interactionType === allowedInteractionType
+    ) {
       // qqqq
       d3.select(chartRef.current).selectAll('.bars').style('opacity', 0.3)
       // 然后找到与message相等的点，将其透明度设置为1
@@ -487,7 +487,7 @@ const Bar: React.FC<BarProps> = ({
           console.log(+d3.select(this).attr('data-value'))
           if (x === curMessage.interactionKey)
             return d3.select(this).attr('data-label') === curMessage.message
-          else return +d3.select(this).attr('data-value') === curMessage.message
+          else return +d3.select(this).attr('data-value') == curMessage.message
         })
         .style('opacity', 1)
     }

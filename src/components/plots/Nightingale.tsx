@@ -280,7 +280,7 @@ const Pie: React.FC<PieProps> = ({
           console.log(+d3.select(this).attr('data-value'))
           if (x === curMessage.interactionKey)
             return +d3.select(this).attr('data-label') === curMessage.message
-          else return +d3.select(this).attr('data-value') === curMessage.message
+          else return +d3.select(this).attr('data-value') == curMessage.message
         })
         .style('opacity', 1)
     }

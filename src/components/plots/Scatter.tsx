@@ -468,9 +468,6 @@ const Scatter: React.FC<ScatterProps> = ({
     if (curMessage === undefined) {
       return
     }
-    if (!allowedInteractionType) {
-      return
-    }
     if (curMessage.interactionKey !== undefined) {
       if (
         !data.length ||
@@ -480,16 +477,19 @@ const Scatter: React.FC<ScatterProps> = ({
       }
     }
 
-    if (curMessage.interactionType === allowedInteractionType) {
+    if (
+      !allowedInteractionType ||
+      curMessage.interactionType === allowedInteractionType
+    ) {
       d3.select(chartRef.current).selectAll('.dots').style('opacity', 0.3)
       d3.select(chartRef.current)
         .selectAll('.dots')
         .filter(function () {
           if (x === curMessage.interactionKey)
-            return +d3.select(this).attr('data-x') === curMessage.message
+            return +d3.select(this).attr('data-x') == curMessage.message
           else if (y === curMessage.interactionKey)
-            return +d3.select(this).attr('data-y') === curMessage.message
-          else return d3.select(this).attr('data-label') === curMessage.message
+            return +d3.select(this).attr('data-y') == curMessage.message
+          else return d3.select(this).attr('data-label') == curMessage.message
         })
         .style('opacity', 1)
     }

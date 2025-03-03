@@ -177,13 +177,7 @@ function drawBarChart(
       // 传递完整的交互信息
       handleHoverThrottled(d[curInteractionKey])
       // 添加当前图表的信息到消息中
-      const highlightMessage: messageType = {
-        hoverOrNot: true,
-        message: d[curInteractionKey],
-        interactionType: interactionType,
-        interactionKey: interactionKey, // 使用组件prop中的interactionKey
-      }
-      dispatch(ChangeMessageSetting(highlightMessage))
+      
 
       if (tooltip?.open) {
         const tooltipText = tooltip.text
@@ -254,7 +248,7 @@ function drawBarChart(
         legendTransform = `translate(1, 1)`
         break
       case 'top-right':
-        legendTransform = `translate(${width - margin.right}, 1)`
+        legendTransform = `translate(${width - margin.right + 10}, 1)`
         break
       case 'bottom-left':
         legendTransform = `translate(20, ${height - margin.top})`
@@ -455,6 +449,7 @@ const Bar: React.FC<BarProps> = ({
   )
   const chartRef = useRef<HTMLDivElement>(null)
 
+  // debugger
   const transformedData = applyTransformations(data, transform)
   const processedData = preprocessData(transformedData, x, y, groupBy)
 

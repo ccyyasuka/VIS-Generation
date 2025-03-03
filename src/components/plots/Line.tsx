@@ -469,9 +469,6 @@ const Line: React.FC<LineProps> = ({
       return
     }
     console.log(curMessage.interactionType, allowedInteractionType)
-    if (!allowedInteractionType) {
-      return
-    }
     if (curMessage.interactionKey !== undefined) {
       if (
         !data.length ||
@@ -481,7 +478,10 @@ const Line: React.FC<LineProps> = ({
       }
     }
 
-    if (curMessage.interactionType === allowedInteractionType) {
+    if (
+      !allowedInteractionType ||
+      curMessage.interactionType === allowedInteractionType
+    ) {
       // console.log("debug-data-value", message)
       d3.select(chartRef.current).selectAll('.points').style('opacity', 0.3)
       d3.select(chartRef.current).selectAll('.lines').style('opacity', 0.3)
@@ -491,7 +491,7 @@ const Line: React.FC<LineProps> = ({
         .filter(function () {
           if (x === curMessage.interactionKey)
             return d3.select(this).attr('data-label') === curMessage.message
-          else return +d3.select(this).attr('data-value') === curMessage.message
+          else return +d3.select(this).attr('data-value') == curMessage.message
         })
         .style('opacity', 1)
     }

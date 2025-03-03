@@ -1,0 +1,72 @@
+[
+    {
+        "Sales_Rep": "Alice",
+        "Region": "South",
+        "Sales_Amount": 4775.59
+    },
+    {
+        "Sales_Rep": "Bob",
+        "Region": "East",
+        "Sales_Amount": 6116.75
+    },
+    {
+        "Sales_Rep": "Bob",
+        "Region": "North",
+        "Sales_Amount": 7289.8
+    },
+    {
+        "Sales_Rep": "Bob",
+        "Region": "South",
+        "Sales_Amount": 3620.29
+    },
+    {
+        "Sales_Rep": "Bob",
+        "Region": "West",
+        "Sales_Amount": 7201.07
+    },
+    {
+        "Sales_Rep": "Charlie",
+        "Region": "East",
+        "Sales_Amount": 3750.2
+    },
+    {
+        "Sales_Rep": "Charlie",
+        "Region": "South",
+        "Sales_Amount": 8813.55
+    },
+    {
+        "Sales_Rep": "Charlie",
+        "Region": "West",
+        "Sales_Amount": 12000.73
+    },
+    {
+        "Sales_Rep": "David",
+        "Region": "North",
+        "Sales_Amount": 6810.35
+    },
+    {
+        "Sales_Rep": "David",
+        "Region": "South",
+        "Sales_Amount": 8854.619999999999
+    },
+    {
+        "Sales_Rep": "David",
+        "Region": "West",
+        "Sales_Amount": 3023.48
+    },
+    {
+        "Sales_Rep": "Eve",
+        "Region": "North",
+        "Sales_Amount": 8518.45
+    },
+    {
+        "Sales_Rep": "Eve",
+        "Region": "South",
+        "Sales_Amount": 7698.92
+    },
+    {
+        "Sales_Rep": "Eve",
+        "Region": "West",
+        "Sales_Amount": 6607.8
+    }
+]

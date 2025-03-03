@@ -32,5 +32,5 @@ export default function calculateMargin(
     }
     return { top: 30, right: 20, bottom: 40, left: 60 }
   }
-  return { top: 30, right: 20, bottom: 40, left: 60 }
+  return { top: 30, right: 80, bottom: 40, left: 60 }
 }

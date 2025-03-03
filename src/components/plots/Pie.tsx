@@ -64,7 +64,6 @@ function drawPieChart(
       interactionType: interactionType || 'default',
       interactionKey: interactionkey || 'default',
     }
-    highlightMessage.interactionType = 'ByValue'
 
     dispatch(
       ChangeMessageSetting({
@@ -134,7 +133,7 @@ function drawPieChart(
     .attr('class', 'arcs')
     .attr('data-value', (d) => d.value.toFixed(2))
     .on('mouseenter', (event, d) => {
-      handleHoverThrottled(d.value)
+      handleHoverThrottled(d.data[curInteractionKey])
       if (tooltip?.open) {
         const tooltipText = tooltip.text.replace('{y}', d.value.toFixed(2))
         tooltipElement
@@ -143,11 +142,14 @@ function drawPieChart(
           .style('top', `${event.pageY + 5}px`)
           .style('left', `${event.pageX + 5}px`)
       }
+      // debugger
+      let a = svg.selectAll('.arcs')
       svg
-        .selectAll('rect')
+        .selectAll('.arcs')
         .transition()
         .duration(150)
         .style('opacity', function () {
+          // debugger
           return this === event.currentTarget ? '1' : '0.618' // 对当前rect保持不变，其他的设置透明度为0.618
         })
     })
@@ -263,9 +265,6 @@ const Pie: React.FC<PieProps> = ({
     if (curMessage === undefined) {
       return
     }
-    if (!allowedInteractionType) {
-      return
-    }
     if (curMessage.interactionKey !== undefined) {
       if (
         !data.length ||
@@ -275,7 +274,10 @@ const Pie: React.FC<PieProps> = ({
       }
     }
 
-    if (curMessage.interactionType === allowedInteractionType) {
+    if (
+      !allowedInteractionType ||
+      curMessage.interactionType === allowedInteractionType
+    ) {
       // console.log("debug-data-value", message)
       d3.select(chartRef.current).selectAll('.arcs').style('opacity', 0.3)
       // 然后找到与message相等的点，将其透明度设置为1
@@ -285,7 +287,7 @@ const Pie: React.FC<PieProps> = ({
           console.log(+d3.select(this).attr('data-value'))
           if (x === curMessage.interactionKey)
             return +d3.select(this).attr('data-label') === curMessage.message
-          else return +d3.select(this).attr('data-value') === curMessage.message
+          else return +d3.select(this).attr('data-value') == curMessage.message
         })
         .style('opacity', 1)
     }

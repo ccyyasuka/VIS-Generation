@@ -1,31 +1,107 @@
 import * as d3 from 'd3'
 import React, { useRef, useEffect } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { messageType } from '../../types'
+import { ChangeMessageSetting } from './redux/action/action'
+import { AppState, ReduxProviderWrapper } from './redux/store'
+import WrapperWithButton, { figWrapperProps } from '../wrapperButton'
 
 type ForceGraphData = {
-  nodes: { id: string; data: { type: string } }[]
-  edges: { source: string; target: string }[]
+  nodes: { id: string; group: number }[]
+  links: { source: string; target: string; value: number }[]
 }
 
-interface NodeData {
-  x: number
-  y: number
-  id: string
-  data: {
-    type: string
-  }
-  fx?: number | null // Add fx and fy to fix the node's position during dragging
-  fy?: number | null
+interface ForceGraphProps {
+  data: ForceGraphData
+  width: string
+  height: string
+  left: string
+  top: string
+  interactionType: string
+  interactionKey: string
+  allowedInteractionType: string
+  color?: string[]
+  title?: string
 }
 
-function drawForceGraph(data: ForceGraphData, element: HTMLSpanElement): void {
+const ForceGraph: React.FC<ForceGraphProps> = ({
+  data,
+  width,
+  height,
+  left,
+  top,
+  interactionType,
+  interactionKey,
+  allowedInteractionType,
+  color,
+  title,
+}) => {
+  const graphRef = useRef<HTMLDivElement>(null)
+  const dispatch = useDispatch()
+  const curMessage: messageType = useSelector(
+    (state: AppState) => state.message
+  )
+
+  useEffect(() => {
+    if (graphRef.current) {
+      drawForceGraph(
+        data,
+        graphRef.current,
+        dispatch,
+        interactionType,
+        interactionKey
+      )
+    }
+  }, [data])
+
+  useEffect(() => {
+    if (curMessage === undefined) return
+
+    if (
+      !allowedInteractionType ||
+      curMessage.interactionType === allowedInteractionType
+    ) {
+      d3.select(graphRef.current).selectAll('.node').style('opacity', 0.3)
+
+      d3.select(graphRef.current)
+        .selectAll('.node')
+        .filter(function () {
+          return d3.select(this).attr('data-id') === curMessage.message
+        })
+        .style('opacity', 1)
+    }
+  }, [curMessage])
+
+  return (
+    <ReduxProviderWrapper>
+      <div
+        ref={graphRef}
+        style={{
+          width,
+          height,
+          position: 'absolute',
+          left,
+          top,
+        }}></div>
+    </ReduxProviderWrapper>
+  )
+}
+
+function drawForceGraph(
+  data: ForceGraphData,
+  element: HTMLDivElement,
+  dispatch: any,
+  interactionType: string,
+  interactionKey: string
+): void {
   const width = element.clientWidth
   const height = element.clientHeight
   const colorScale = d3.scaleOrdinal(d3.schemeCategory10)
-  // 清空element中的内容，避免创建多个SVG
+
   while (element.firstChild) {
     element.removeChild(element.firstChild)
   }
-  // Create the SVG container
+
   const svg = d3
     .select(element)
     .append('svg')
@@ -36,7 +112,7 @@ function drawForceGraph(data: ForceGraphData, element: HTMLSpanElement): void {
 
   const g = svg.append('g')
 
-  const links = data.edges.map((d) => ({ ...d }))
+  const links = data.links.map((d) => ({ ...d }))
   const nodes = data.nodes.map((d) => ({
     ...d,
     x: Math.random() * width,
@@ -50,10 +126,12 @@ function drawForceGraph(data: ForceGraphData, element: HTMLSpanElement): void {
       d3
         .forceLink(links)
         .id((d: any) => d.id)
-        .distance(100)
+        .distance((d) => Math.max(30, Math.min(100, d.value * 2)))
     )
-    .force('charge', d3.forceManyBody().strength(-200))
-    .force('center', d3.forceCenter(width / 2, height / 2))
+    .force('charge', d3.forceManyBody().strength(-80)) // 适当减少斥力
+    .force('center', d3.forceCenter(width / 2, height / 2)) // 居中
+    .force('x', d3.forceX(width / 2).strength(0.05)) // 水平方向控制
+    .force('y', d3.forceY(height / 2).strength(0.05)) // 垂直方向控制
     .on('tick', ticked)
 
   const link = g
@@ -64,27 +142,35 @@ function drawForceGraph(data: ForceGraphData, element: HTMLSpanElement): void {
     .data(links)
     .enter()
     .append('line')
-    .attr('stroke-width', (d: any) => Math.sqrt(d.value))
+    .attr('stroke-width', (d) => Math.sqrt(d.value))
 
   const node = g
     .append('g')
     .attr('stroke', '#fff')
     .attr('stroke-width', 1.5)
-    .selectAll('circle')
+    .selectAll<
+      SVGCircleElement,
+      { x: number; y: number; id: string; group: number }
+    >('circle') // 👈 Fix Type
     .data(nodes)
     .enter()
     .append('circle')
-    .attr('r', 5)
-    .attr('fill', (d: NodeData) => colorScale(d.data.type))
+    .attr('r', 8)
+    .attr('fill', (d) => colorScale(d.group.toString()))
+    .attr('class', 'node')
+    .attr('data-id', (d) => d.id)
     .call(
       d3
-        .drag<SVGCircleElement, NodeData>() // Define drag behavior
+        .drag<
+          SVGCircleElement,
+          { x: number; y: number; id: string; group: number }
+        >() // 👈 Fix Type Here
         .on('start', dragStarted)
         .on('drag', dragging)
         .on('end', dragEnded)
     )
 
-  node.append('title').text((d: NodeData) => d.id)
+  node.append('title').text((d) => d.id)
 
   function ticked() {
     link
@@ -93,61 +179,77 @@ function drawForceGraph(data: ForceGraphData, element: HTMLSpanElement): void {
       .attr('x2', (d: any) => d.target.x)
       .attr('y2', (d: any) => d.target.y)
 
-    node.attr('cx', (d: NodeData) => d.x).attr('cy', (d: NodeData) => d.y)
+    node.attr('cx', (d) => d.x).attr('cy', (d) => d.y)
   }
 
-  function dragStarted(event: d3.D3DragEvent<SVGCircleElement, NodeData, any>) {
+  function dragStarted(event: any) {
     if (!event.active) simulation.alphaTarget(0.3).restart()
     event.subject.fx = event.subject.x
     event.subject.fy = event.subject.y
   }
 
-  function dragging(event: d3.D3DragEvent<SVGCircleElement, NodeData, any>) {
+  function dragging(event: any) {
     event.subject.fx = event.x
     event.subject.fy = event.y
   }
 
-  function dragEnded(event: d3.D3DragEvent<SVGCircleElement, NodeData, any>) {
+  function dragEnded(event: any) {
     if (!event.active) simulation.alphaTarget(0)
     event.subject.fx = null
     event.subject.fy = null
   }
 }
 
-interface ForceGraphProps {
-  data: ForceGraphData
-  width: string
-  height: string
-  left: string
-  top: string
-}
+const ForceGraphWithRedux: React.FC<ForceGraphProps> = (props) => (
+  <ReduxProviderWrapper>
+    <ForceGraph {...props} />
+  </ReduxProviderWrapper>
+)
 
-const ForceGraph: React.FC<ForceGraphProps> = ({
+const BarWithWrapper: React.FC<figWrapperProps & ForceGraphProps> = ({
   data,
   width,
   height,
   left,
   top,
+  offsetLeft,
+  offsetTop,
+  interactionType,
+  interactionKey,
+  allowedInteractionType,
+  color,
+  title,
+  id,
 }) => {
-  const graphRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (graphRef.current) {
-      drawForceGraph(data, graphRef.current)
-    }
-  }, [data]) // Redraw graph if 'data' changes
+  // Set new width and height similar to line chart
+  const newWidth = `100%`
+  const newHeight = `95%`
+  const newLeft = '10px'
+  const newTop = '10px'
 
   return (
-    <div
-      ref={graphRef}
-      style={{
-        width: width,
-        height: height,
-        position: 'absolute',
-        left: left,
-        top: top,
-      }}></div>
+    <WrapperWithButton
+      width={width}
+      height={height}
+      id={id}
+      left={left}
+      top={top}
+      offsetLeft={offsetLeft}
+      offsetTop={offsetTop}>
+      <ForceGraphWithRedux
+        data={data}
+        width={newWidth}
+        height={newHeight}
+        left={newLeft}
+        top={newTop}
+        interactionType={interactionType}
+        interactionKey={interactionKey}
+        allowedInteractionType={allowedInteractionType}
+        color={color}
+        title={title}
+      />
+    </WrapperWithButton>
   )
 }
 
-export default ForceGraph
+export default BarWithWrapper
