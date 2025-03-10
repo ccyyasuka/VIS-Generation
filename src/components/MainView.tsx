@@ -70,7 +70,7 @@ const MainView: React.FC<MainViewProps> = ({ offset }) => {
   const data: any[] = selectedData
 
   // debugger
-  // const curConfig: ConfigItem[] = config
+  const curConfig: ConfigItem[] = config
   // console.log('curConfig', curConfig)
 
   // console.log('datadatadatadata11111', data, curConfig)
@@ -126,61 +126,53 @@ const MainView: React.FC<MainViewProps> = ({ offset }) => {
     { year: '2023', height: 180, weight: 60, value: 10, category: 'C' },
     { year: '2024', height: 280, weight: 20, value: 60, category: 'C' },
   ]
-
-  const curConfig: ConfigItem[] = [
-    {
-      name: 'ForceDirect',
-      id: 'aa',
-      data: data1,
-      title: '',
-      description: '销售代表按区域的业绩展示',
-      meta: {
-        width: '40%',
-        height: '90%',
-        left: '5%',
-        top: '5%',
-      },
-      interactionType: 'filter_02',
-      interactionKey: 'weight',
-      allowedInteractionType: 'filter_01',
-      legendBy: 'category',
-      legend: {
-        open: true,
-        legendPosition: 'top-right',
-        legendOrientation: 'horizontal',
-      },
-      tooltip: {
-        open: true,
-        text: '{x}在{y}的销售额是{z}',
-      },
-    },
-    {
-      name: 'ArcDiagram',
-      id: 'aa',
-      data: data1,
-      title: '',
-      description: '销售代表按区域的业绩展示',
-      meta: {
-        width: '40%',
-        height: '90%',
-        left: '55%',
-        top: '5%',
-      },
-      interactionType: 'filter_02',
-      interactionKey: 'weight',
-      allowedInteractionType: 'filter_01',
-      legendBy: 'category',
-      legend: {
-        open: true,
-        legendPosition: 'top-right',
-        legendOrientation: 'horizontal',
-      },
-      tooltip: {
-        open: true,
-        text: '{x}在{y}的销售额是{z}',
-      },
-    },
-  ]
+  const b = {
+    id: 'aa',
+    title: 'aa',
+    description: 'aa',
+    allowedInteractionType: '',
+    interactionType: '',
+    interactionKey: '',
+  }
+  // const curConfig: ConfigItem[] = [
+  //   {
+  //     id: 'aa',
+  //     title: 'aa',
+  //     description: 'aa',
+  //     allowedInteractionType: '',
+  //     interactionType: '',
+  //     interactionKey: '',
+  //     name: 'BarVertical',
+  //     data: [
+  //       { 'Disease Type': 'Asthma', Recovered: 'No', Count: 1 },
+  //       { 'Disease Type': 'Asthma', Recovered: 'Yes', Count: 1 },
+  //       { 'Disease Type': 'Bronchitis', Recovered: 'No', Count: 1 },
+  //       { 'Disease Type': 'Bronchitis', Recovered: 'Yes', Count: 2 },
+  //       { 'Disease Type': 'COPD', Recovered: 'Yes', Count: 1 },
+  //       { 'Disease Type': 'Lung Cancer', Recovered: 'No', Count: 1 },
+  //       { 'Disease Type': 'Lung Cancer', Recovered: 'Yes', Count: 1 },
+  //       { 'Disease Type': 'Pneumonia', Recovered: 'Yes', Count: 3 },
+  //     ],
+  //     meta: {
+  //       width: '60%',
+  //       height: '60%',
+  //       left: '20%',
+  //       top: '10%',
+  //     },
+  //     x: 'Disease Type',
+  //     y: 'Count',
+  //     legendBy: 'Recovered',
+  //     legend: {
+  //       open: true,
+  //       legendPosition: 'top-right',
+  //       legendOrientation: 'horizontal',
+  //     },
+  //     tooltip: {
+  //       open: true,
+  //       text: '{x} - {Recovered}: {y} patients',
+  //     },
+  //   },
+  // ]
 
   // 地图数据测试样例
 

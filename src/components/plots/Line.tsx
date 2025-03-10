@@ -128,9 +128,8 @@ function drawLineChart(
   const innerHeight = height - margin.top - margin.bottom
 
   // 新增分组逻辑
-  const groups = Array.from(new Set(data.map((d) => d.groupBy))).filter(
-    Boolean
-  ) as string[]
+  const groups = Array.from(new Set(data.map((d) => d.groupBy))) as string[]
+
   const labels = Array.from(new Set(data.map((d) => d.label)))
 
   // 创建嵌套比例尺
@@ -214,7 +213,7 @@ function drawLineChart(
       })
   })
 
-  if (legend?.open) {
+  if (legend?.open&&groups.length>1) {
     const legendGroup = svg
       .append('g')
       .attr('font-family', 'sans-serif')

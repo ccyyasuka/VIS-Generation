@@ -1,0 +1,145 @@
+{
+    "nodes": [
+        {
+            "id": "Fantine",
+            "group": 3
+        },
+        {
+            "id": "Valjean",
+            "group": 2
+        },
+        {
+            "id": "Marguerite",
+            "group": 2
+        },
+        {
+            "id": "Tholomyes",
+            "group": 3
+        },
+        {
+            "id": "Listolier",
+            "group": 3
+        },
+        {
+            "id": "Fameuil",
+            "group": 3
+        },
+        {
+            "id": "Blacheville",
+            "group": 3
+        },
+        {
+            "id": "Favourite",
+            "group": 3
+        },
+        {
+            "id": "Dahlia",
+            "group": 3
+        },
+        {
+            "id": "Zephine",
+            "group": 3
+        },
+        {
+            "id": "MmeThenardier",
+            "group": 8
+        },
+        {
+            "id": "Thenardier",
+            "group": 8
+        },
+        {
+            "id": "Javert",
+            "group": 8
+        },
+        {
+            "id": "Bamatabois",
+            "group": 4
+        },
+        {
+            "id": "Perpetue",
+            "group": 3
+        },
+        {
+            "id": "Simplice",
+            "group": 3
+        }
+    ],
+    "links": [
+        {
+            "source": "Fantine",
+            "target": "Valjean",
+            "value": 1
+        },
+        {
+            "source": "Fantine",
+            "target": "Marguerite",
+            "value": 1
+        },
+        {
+            "source": "Fantine",
+            "target": "Tholomyes",
+            "value": 1
+        },
+        {
+            "source": "Fantine",
+            "target": "Listolier",
+            "value": 1
+        },
+        {
+            "source": "Fantine",
+            "target": "Fameuil",
+            "value": 1
+        },
+        {
+            "source": "Fantine",
+            "target": "Blacheville",
+            "value": 1
+        },
+        {
+            "source": "Fantine",
+            "target": "Favourite",
+            "value": 1
+        },
+        {
+            "source": "Fantine",
+            "target": "Dahlia",
+            "value": 1
+        },
+        {
+            "source": "Fantine",
+            "target": "Zephine",
+            "value": 1
+        },
+        {
+            "source": "MmeThenardier",
+            "target": "Fantine",
+            "value": 1
+        },
+        {
+            "source": "Thenardier",
+            "target": "Fantine",
+            "value": 1
+        },
+        {
+            "source": "Javert",
+            "target": "Fantine",
+            "value": 1
+        },
+        {
+            "source": "Bamatabois",
+            "target": "Fantine",
+            "value": 1
+        },
+        {
+            "source": "Perpetue",
+            "target": "Fantine",
+            "value": 1
+        },
+        {
+            "source": "Simplice",
+            "target": "Fantine",
+            "value": 1
+        }
+    ]
+}

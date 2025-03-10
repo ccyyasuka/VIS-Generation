@@ -41,88 +41,47 @@ ROUND = 0
 def chat():
     global ROUND
     if (MOCK):
-        time.sleep(20)
-        with open(r".\caseExperience\top_players_2023_24_regular.json", 'r', encoding='utf-8') as file:
+        time.sleep(2)
+        with open(r".\caseExperience\formatted_fantine_two_hops_data.json", 'r', encoding='utf-8') as file:
             data_dict = json.load(file)
         graph_data = json.dumps(data_dict, ensure_ascii=False, indent=4)
-        reply = """The analysis of the top three-point shooters and their related abilities highlights the exceptional performance of 8 players during the 2023-24 NBA season.  These players not only excel in three-point shooting but also demonstrate strong overall abilities in various aspects of the game, contributing significantly to their teams' success."""
-        recommendation = ["""Consider analyzing the impact of these players' performances on their teams during the season.""",
-                          """Explore the correlation between three-point shooting and other abilities such as assists and rebounds.""", "Compare these players' performances with other top players in the league.", "FINISH"]
+        reply = """Fantine has connections with many characters that are within two hops, most of whom seem to be in her social circle or from her past life. I have drawn a force direct graph of these characters."""
+        recommendation = ["""Which characters are connected to Javert?""",
+                          "Which characters have relationships with both Fantine and Valjean?", "FINISH"]
         graphs_grammar = [
             {
-                "name": 'BarVertical',
-                "description": '不同支付方式的销售额趋势',
-                "title": "Bar Chart of Players' Three Point Field Goal Percentage",
+                "name": 'ArcDiagram',
+                "description": '人物关系图',
+                "title": "Force Direct Chart of Characters' Relationship",
                 "id": '111',
-                "x": 'PLAYER',
-                "y": 'FG3_PCT',
-                "interactionType": 'filter_01',
-                "interactionKey": 'PLAYER',
-                "allowedInteractionType": 'filter_01',
-                "tooltip": {
-                    "open": True,
-                    "text": 'The three point field goal Percentage of {x} is {y}.',
-                },
-            },
-            {
-                "name": 'BarVertical',
-                "description": '不同支付方式的销售额趋势',
-                "title": "Bar Chart of Players' Assists",
-                "id": '222',
-                # "meta": {
-                #     "width": '45%',
-                #     "height": '45%',
-                #     "left": '3%',
-                #     "top": '3%',
-                # },
-                "x": 'PLAYER',
-                "y": 'AST',
-                "interactionType": 'filter_01',
-                "interactionKey": 'PLAYER',
-                "allowedInteractionType": 'filter_01',
-                "tooltip": {
-                    "open": True,
-                    "text": 'The assists of {x} is {y}.',
-                },
-            },
-
-            {
-                "name": 'BarVertical',
-                "description": '不同支付方式的销售额趋势',
-                "title": "Bar Chart of Players' Turnovers",
-                "id": '333',
-                # "meta": {
-                #     "width": '45%',
-                #     "height": '45%',
-                #     "left": '3%',
-                #     "top": '3%',
-                # },
-                "x": 'PLAYER',
-                "y": 'TOV',
-                "interactionType": 'filter_01',
-                "interactionKey": 'PLAYER',
-                "allowedInteractionType": 'filter_01',
-                "tooltip": {
-                    "open": True,
-                    "text": 'The turnovers of {x} is {y}.',
-                },
-            },
-            {
-                "name": 'BarVertical',
-                "description": '不同支付方式的销售额趋势',
-                "title": "Bar Chart of Players' Assist to Turnover Ratio",
-                "id": '444',
                 "meta": {
-                    "width": '45%',
-                    "height": '45%',
+                    "width": '95%',
+                    "height": '95%',
                     "left": '3%',
                     "top": '3%',
                 },
-                "x": 'PLAYER',
-                "y": 'AST_TOV',
                 "interactionType": 'filter_01',
-                "interactionKey": 'PLAYER',
-                "allowedInteractionType": 'filter_01',
+                "interactionKey": 'id',
+                "allowedInteractionType": 'filter_02',
+                "tooltip": {
+                    "open": True,
+                    "text": 'The assist to turnover ratio of {x} is {y}.',
+                },
+            },
+            {
+                "name": 'ForceDirect',
+                "description": '人物关系图',
+                "title": "Force Direct Chart of Characters' Relationship",
+                "id": '222',
+                "meta": {
+                    "width": '95%',
+                    "height": '95%',
+                    "left": '3%',
+                    "top": '3%',
+                },
+                "interactionType": 'filter_01',
+                "interactionKey": 'id',
+                "allowedInteractionType": 'filter_02',
                 "tooltip": {
                     "open": True,
                     "text": 'The assist to turnover ratio of {x} is {y}.',
@@ -133,7 +92,7 @@ def chat():
             "id": "111",
             "meta": {
                 "width": '45%',
-                "height": '45%',
+                "height": '90%',
                 "left": '2%',
                 "top": '5%',
             },
@@ -142,29 +101,11 @@ def chat():
             "id": "222",
             "meta": {
                 "width": '45%',
-                "height": '45%',
-                "left": '55%',
+                "height": '90%',
+                "left": '50%',
                 "top": '5%',
             },
-        },
-            {
-            "id": "333",
-            "meta": {
-                "width": '45%',
-                "height": '45%',
-                "left": '5%',
-                "top": '50%',
-            },
-        },
-            {
-            "id": "444",
-            "meta": {
-                "width": '45%',
-                "height": '45%',
-                "left": '55%',
-                "top": '50%',
-            },
-        },
+        }
         ]
 
         return jsonify({
@@ -250,35 +191,6 @@ def chat():
         "recommendation": recommendation,
         "graph_layout": converted_graph_layout
     })
-    # content_dict = json.loads(res.content)
-
-    # return jsonify({
-    #     'role': 'system',
-    #     'status': '成功',
-    #     'summary': content_dict["reply"],
-    #     'analyze_result': content_dict["graphs_grammar"],
-    #     'recommendation': content_dict["recommendation"]})
-
-    # print("***************************************")
-    # print(user_input)
-    # print("***************************************")
-
-    # gpt_resp = client.chat.completions.create(
-    #     model='gpt-4o-mini',
-    #     messages=user_input,
-    #     timeout=30,
-    #     n=1
-    # )
-    # print(gpt_resp)
-    # clean_responce = ""
-    # if gpt_resp.choices and gpt_resp.choices[0]:
-    #     clean_responce: str = gpt_resp.choices[0].message.content.strip()
-    # print("clean_responceclean_responceclean_responce")
-    # print(clean_responce)
-    # return jsonify({
-    #     "role": "system",
-    #     "content": clean_responce
-    # })
 
 
 @app.route('/preview', methods=['POST'])
@@ -307,17 +219,56 @@ def preview_file():
 @app.route('/upload', methods=['POST'])
 def upload_file():
     global ROUND
-    # if (MOCK):
-    #     time.sleep(1)
-    #     return jsonify({
-    #         'role': 'system',
-    #         'status': '成功',
-    #         'graph_data': "[]",
-    #         'reply': "This dataset is an nba player performance dataset, what do you need?",
-    #         'graphs_grammar': [],
-    #         "recommendation": ["Explore the relationship between 3-point shooting percentage and free throw shooting percentage", "Explore the relationship between 3-point shooting percentage and rebounding", "FINISH"],
-    #         "graph_layout": []
-    #     })
+    if (MOCK):
+        time.sleep(2)
+        with open(r".\caseExperience\formatted_data.json", 'r', encoding='utf-8') as file:
+            data_dict = json.load(file)
+        graph_data = json.dumps(data_dict, ensure_ascii=False, indent=4)
+        reply = """This data seems to compile the characters from 'Les Misérables' and their relationships. I have plotted a network graph of these characters and their interactions."""
+        recommendation = ["""Which characters are connected to Fantine?""",
+                          """What does it mean when characters belong to the same category?""", "FINISH"]
+        graphs_grammar = [
+            {
+                "name": 'ArcDiagram',
+                "description": '人物关系图',
+                "title": "Force Direct Chart of Characters' Relationship",
+                "id": '111',
+                "meta": {
+                    "width": '95%',
+                    "height": '95%',
+                    "left": '3%',
+                    "top": '3%',
+                },
+                "interactionType": 'filter_01',
+                "interactionKey": 'id',
+                "allowedInteractionType": 'filter_02',
+                "tooltip": {
+                    "open": True,
+                    "text": 'The assist to turnover ratio of {x} is {y}.',
+                },
+            },
+        ]
+        graph_layout = [{
+            "id": "111",
+            "meta": {
+                "width": '95%',
+                "height": '95%',
+                "left": '3%',
+                "top": '3%',
+            },
+        }
+        ]
+
+        return jsonify({
+            'role': 'system',
+            'status': '成功',
+            'graph_data': graph_data,
+            'reply': reply,
+            'graphs_grammar': graphs_grammar,
+            "recommendation": recommendation,
+            "graph_layout": graph_layout
+        })
+
     if 'file' not in request.files:
         return jsonify({'error': '没有文件'}), 400
 
