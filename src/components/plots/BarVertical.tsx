@@ -138,6 +138,7 @@ function drawBarChart(
     .scaleOrdinal<string>()
     .domain(groups)
     .range(color || d3.schemeCategory10)
+  debugger
 
   // 绘制柱子
 
@@ -177,7 +178,6 @@ function drawBarChart(
       // 传递完整的交互信息
       handleHoverThrottled(d[curInteractionKey])
       // 添加当前图表的信息到消息中
-      
 
       if (tooltip?.open) {
         const tooltipText = tooltip.text

@@ -32,9 +32,10 @@ const yAxisAcquiesce = {
   angle: 0, // x轴标签旋转角度
   tickSize: 6, // x轴刻度线大小
 }
+// 讲解：绘制折线图的函数
 function drawLineChart(
   data: LineDataItem[],
-  element: HTMLSpanElement,
+  element: HTMLSpanElement,//放可视化图表的dom元素
   dispatch: any,
   interactionType: string,
   interactionkey: string, // 指明原始key
@@ -71,6 +72,7 @@ function drawLineChart(
       element.removeChild(element.firstChild)
     }
   }
+  // 讲解：鼠标放上去需要把信息发送到全局事务总线上
   const handleHover = (message: number | string) => {
     let formattedMessage: string | number = message
 
@@ -87,6 +89,8 @@ function drawLineChart(
       interactionKey: interactionkey || 'default',
     }
 
+    // 讲解：发送到事务总线
+    // 讲解：事务总线的代码在src\components\plots\redux文件夹下面
     dispatch(
       ChangeMessageSetting({
         ...highlightMessage,
@@ -213,7 +217,7 @@ function drawLineChart(
       })
   })
 
-  if (legend?.open&&groups.length>1) {
+  if (legend?.open && groups.length > 1) {
     const legendGroup = svg
       .append('g')
       .attr('font-family', 'sans-serif')
@@ -238,7 +242,6 @@ function drawLineChart(
       default:
         legendTransform = `translate(${width - margin.right}, 1)`
     }
-
     legendGroup.attr('transform', legendTransform)
 
     // 控制图例项的排列方式
@@ -443,6 +446,7 @@ const Line: React.FC<LineProps> = ({
   useEffect(() => {
     if (chartRef.current) {
       let curInteractionKey = interactionKey === y ? 'value' : 'label'
+      // 讲解：drawLineChart中绘制折线图
       drawLineChart(
         processedData,
         chartRef.current,
@@ -461,6 +465,8 @@ const Line: React.FC<LineProps> = ({
       )
     }
   }, [data]) // Dependency array: Redraw chart if 'data' changes
+
+  // 讲解：在下面的代码中处理其他图表通过全局事务总线传来的信息，做出对应的变化
   React.useEffect(() => {
     // console.log("debug-data-value", interactionType, message)
     console.log('接收到了信息', curMessage)
@@ -524,7 +530,7 @@ const Line: React.FC<LineProps> = ({
     </ReduxProviderWrapper>
   )
 }
-
+// 讲解：使用redux实现全局事务总线，在这里给折线图加上全局事务总线
 const LineWithRedux: React.FC<LineProps> = (props) => (
   <ReduxProviderWrapper>
     <Line {...props} />
@@ -555,12 +561,11 @@ const BarWithWrapper: React.FC<figWrapperProps & LineProps> = ({
   color,
   title,
 }) => {
-  // Calculate new width and height
   const newWidth = `100%`
   const newHeight = `95%`
   const newLeft = '10px'
   const newTop = '10px'
-
+  // 讲解：WrapperWithButton是给拖拉拽视图功能做的封装
   return (
     <WrapperWithButton
       width={width}

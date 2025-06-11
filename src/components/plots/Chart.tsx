@@ -7,6 +7,7 @@ import Scatter from './Scatter'
 import Donat from './Donat'
 import ForceDirect from './ForceDirect'
 import ArcDiagram from './ArcDiagram'
+import Nightingale from './Nightingale'
 type ConfigItem = {
   name: string
   id: string
@@ -51,7 +52,7 @@ interface ChartProps {
   left: string
   top: string
 }
-
+// 讲解：这里根据config来决定绘制什么图表，绘制方法请以Line为例子
 const Chart: React.FC<ChartProps> = ({ item, left, top }) => {
   let Component = null
 
@@ -80,6 +81,9 @@ const Chart: React.FC<ChartProps> = ({ item, left, top }) => {
       break
     case 'ArcDiagram':
       Component = ArcDiagram
+      break
+    case 'Nightingale':
+      Component = Nightingale
       break
     default:
       return null

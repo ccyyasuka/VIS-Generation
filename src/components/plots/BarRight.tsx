@@ -156,6 +156,7 @@ function drawBarChart(
     .scaleOrdinal<string>()
     .domain(groups)
     .range(color || d3.schemeCategory10)
+  debugger
 
   // 绘制柱子
   chart
@@ -164,40 +165,60 @@ function drawBarChart(
     .enter()
     .append('rect')
     .attr('class', 'bar-group')
-    .attr('y', (d) => y0(d.label)! + y1(d.groupBy!)!)
+    .attr('y', (d) => {
+      // 先进行类型检查，确保 d.label 和 d.groupBy 存在
+      if (d.label) {
+        if (d.groupBy === null) {
+          // 当 groupBy 为 null 时，柱子在 y0 上定位
+          return y0(d.label)!
+        } else {
+          // 当 groupBy 不为 null 时，柱子在 y0 和 y1 上定位
+          return y0(d.label)! + (d.groupBy ? y1(d.groupBy)! : 0)
+        }
+      }
+      return 0 // 防止 undefined 错误，返回一个默认位置
+    })
     .attr('x', 0)
     .attr('width', (d) => x(d.value))
-    .attr('height', y1.bandwidth())
+    .attr('height', (d) => (d.groupBy ? y1.bandwidth() : y0.bandwidth()))
     .attr('fill', (d) => customColors(d.groupBy!))
     .attr('data-value', (d) => d.value.toFixed(2))
     .attr('data-label', (d) => d.label)
     .on('mouseenter', (event, d) => {
+      const currentBar = d3.select(event.currentTarget)
+      currentBar.transition().style('opacity', 1)
+
+      d3.select(event.currentTarget.parentNode)
+        .selectAll('.bar-group')
+        .filter((node) => node !== d)
+        .transition()
+        .style('opacity', 0.6)
+
+      // 传递完整的交互信息
       handleHoverThrottled(d[curInteractionKey])
+
       if (tooltip?.open) {
         const tooltipText = tooltip.text
           .replace('{x}', d.label)
           .replace('{y}', d.value.toFixed(2))
+
         tooltipElement
           .html(tooltipText)
           .style('visibility', 'visible')
           .style('top', `${event.pageY + 5}px`)
           .style('left', `${event.pageX + 5}px`)
       }
-      d3.select(event.currentTarget).transition().style('opacity', 1)
-      d3.selectAll('.bar-group')
-        .filter((n) => n !== d)
-        .transition()
-        .style('opacity', 0.6)
     })
     .on('mousemove', (event) => {
       // 鼠标移动时，更新 tooltip 的位置
       tooltipElement
-        .style('top', `${event.clientY + 5}px`) // 跟随鼠标垂直位置
-        .style('left', `${event.clientX + 5}px`) // 跟随鼠标水平位置
+        .style('top', `${event.clientY + 5}px`)
+        .style('left', `${event.clientX + 5}px`)
     })
     .on('mouseleave', () => {
       handleLeave()
       tooltipElement.style('visibility', 'hidden')
+
       d3.selectAll('.bar-group').transition().style('opacity', 1)
     })
 

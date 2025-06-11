@@ -31,7 +31,7 @@ const WrapperWithButton: React.FC<WrapperWithButtonProps> = ({
   const dispatch = useDispatch<AppDispatch>()
   const LeftRef = useRef('')
   const TopRef = useRef('')
-  // 计算基于百分比的实际像素值
+  // 讲解：计算css的像素值
   const getPositionInPixels = () => {
     const offsetLeftFloat = parseInt(offsetLeft, 10) // 将 '15px' 转换为 15
     const offsetTopFloat = parseInt(offsetTop, 10)
@@ -40,13 +40,14 @@ const WrapperWithButton: React.FC<WrapperWithButtonProps> = ({
 
   const { offsetLeftFloat, offsetTopFloat } = getPositionInPixels()
 
-  // 开始拖拽
+  // 讲解：开始拖拽的回调函数，
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true)
     e.preventDefault()
   }
 
-  // 拖拽中
+  // 讲解：拖拽中的回调函数，随着拖拽反复重新设定视图的css定位失现拖拽
+  // TODO: 改成百分比定位
   const handleMouseMove = (e: MouseEvent) => {
     e.preventDefault()
     if (isDragging) {

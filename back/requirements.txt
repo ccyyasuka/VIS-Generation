@@ -1,0 +1,12 @@
+Flask==2.2.3
+Flask_Cors==3.0.10
+langchain_anthropic==0.3.15
+langchain_community==0.3.25
+langchain_core==0.3.65
+langchain_openai==0.3.22
+langgraph==0.4.8
+openai==1.86.0
+pandas==2.3.0
+pydantic==2.11.5
+scipy==1.15.3
+typing_extensions==4.14.0

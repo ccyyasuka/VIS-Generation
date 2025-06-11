@@ -24,6 +24,7 @@ function drawPieChart(
   curInteractionKey: string, // 指明是label还是value
   xx: string,
   yy: string,
+  title: string,
   xAxis?: {
     xAxisLabel?: string // x轴名称
     format?: string // x轴坐标格式化函数
@@ -77,7 +78,8 @@ function drawPieChart(
   const container = element
   const width = container.clientWidth
   const height = container.clientHeight
-  const radius = Math.min(width, height) / 2
+  const marginTop = 60 // 预留空间给标题
+  const radius = Math.min(width, height - marginTop) / 2
 
   // Create SVG element
   const svg = d3
@@ -163,12 +165,23 @@ function drawPieChart(
     .attr('transform', (d) => `translate(${arc.centroid(d)})`)
     .attr('text-anchor', 'middle')
     .text((d) => d.data.label)
+  if (title) {
+    d3.select(container)
+      .select('svg')
+      .append('text')
+      .attr('x', width / 2)
+      .attr('y', marginTop / 4) // 让标题在上方居中
+      .attr('text-anchor', 'middle')
+      .style('font-size', '16px')
+      .text(title)
+  }
 }
 type DataItem = {
   [key: string]: any
 }
 interface PieProps {
   data: DataItem[]
+  title: string
   width: string
   height: string
   left: string
@@ -222,6 +235,7 @@ const Pie: React.FC<PieProps> = ({
   legend,
   tooltip,
   color,
+  title,
 }) => {
   const chartRef = useRef<HTMLDivElement>(null)
   const curMessage: messageType = useSelector(
@@ -243,6 +257,7 @@ const Pie: React.FC<PieProps> = ({
         curInteractionKey,
         x,
         y,
+        title,
         xAxis,
         yAxis,
         legend,
@@ -343,6 +358,7 @@ const NightingaleWithWrapper: React.FC<figWrapperProps & PieProps> = ({
   legend,
   tooltip,
   color,
+  title,
 }) => {
   // Calculate new width and height
   const newWidth = `100%`
@@ -379,6 +395,7 @@ const NightingaleWithWrapper: React.FC<figWrapperProps & PieProps> = ({
         legend={legend}
         tooltip={tooltip}
         color={color}
+        title={title}
       />
     </WrapperWithButton>
   )

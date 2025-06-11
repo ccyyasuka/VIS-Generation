@@ -66,102 +66,77 @@ const MainView: React.FC<MainViewProps> = ({ offset }) => {
   // 偏移值
 
   const { selectedData, config } = useSelector((state: any) => state.data)
-  // // console.log('selectedData, config', selectedData, config)
+  // console.log('selectedData, config', selectedData, config)
   const data: any[] = selectedData
 
-  // debugger
+  // 后端传来的数据
   const curConfig: ConfigItem[] = config
-  // console.log('curConfig', curConfig)
+  console.log('curConfig', curConfig)
 
-  // console.log('datadatadatadata11111', data, curConfig)
-  // 统计数据测试样例
-  // const data1: any = testdata
+  console.log('datadatadatadata11111', data, curConfig)
 
-  const data1: any = {
-    nodes: [
-      { id: 'Myriel', group: 1 },
-      { id: 'Napoleon', group: 1 },
-      { id: 'Mlle.Baptistine', group: 1 },
-      { id: 'Mme.Magloire', group: 1 },
-      { id: 'CountessdeLo', group: 1 },
-      { id: 'Valjean', group: 2 },
-      { id: 'Marguerite', group: 3 },
-      { id: 'Tholomyes', group: 3 },
-      { id: 'Fantine', group: 3 },
-      { id: 'Mme.Thenardier', group: 4 },
-      { id: 'Cosette', group: 5 },
-      { id: 'Javert', group: 4 },
-      { id: 'Marius', group: 8 },
-      { id: 'Gavroche', group: 8 },
-      { id: 'Enjolras', group: 8 },
-      { id: 'Combeferre', group: 8 },
-    ],
-    links: [
-      { source: 'Napoleon', target: 'Myriel', value: 1 },
-      { source: 'Mlle.Baptistine', target: 'Myriel', value: 8 },
-      { source: 'Mme.Magloire', target: 'Myriel', value: 10 },
-      { source: 'Valjean', target: 'Myriel', value: 5 },
-      { source: 'Fantine', target: 'Tholomyes', value: 3 },
-      { source: 'Mme.Thenardier', target: 'Fantine', value: 2 },
-      { source: 'Cosette', target: 'Valjean', value: 31 },
-      { source: 'Javert', target: 'Valjean', value: 17 },
-      { source: 'Marius', target: 'Cosette', value: 21 },
-      { source: 'Enjolras', target: 'Marius', value: 7 },
-      { source: 'Combeferre', target: 'Marius', value: 5 },
-      { source: 'Gavroche', target: 'Valjean', value: 1 },
-    ],
-  }
+  // 讲解：以下注释是绘制图表用的样例数据，上面的代码是从后端接收数据。
+  // const data1: any = {
+  //   nodes: [
+  //     { id: 'Myriel', group: 1 },
+  //     { id: 'Napoleon', group: 1 },
+  //     { id: 'Mlle.Baptistine', group: 1 },
+  //     { id: 'Mme.Magloire', group: 1 },
+  //     { id: 'CountessdeLo', group: 1 },
+  //     { id: 'Valjean', group: 2 },
+  //     { id: 'Marguerite', group: 3 },
+  //     { id: 'Tholomyes', group: 3 },
+  //     { id: 'Fantine', group: 3 },
+  //     { id: 'Mme.Thenardier', group: 4 },
+  //     { id: 'Cosette', group: 5 },
+  //     { id: 'Javert', group: 4 },
+  //     { id: 'Marius', group: 8 },
+  //     { id: 'Gavroche', group: 8 },
+  //     { id: 'Enjolras', group: 8 },
+  //   ],
+  //   links: [
+  //     { source: 'Napoleon', target: 'Myriel', value: 1 },
+  //     { source: 'Mlle.Baptistine', target: 'Myriel', value: 8 },
+  //     { source: 'Mme.Magloire', target: 'Myriel', value: 10 },
+  //     { source: 'Valjean', target: 'Myriel', value: 5 },
+  //     { source: 'Fantine', target: 'Tholomyes', value: 3 },
+  //     { source: 'Mme.Thenardier', target: 'Fantine', value: 2 },
+  //     { source: 'Cosette', target: 'Valjean', value: 31 },
+  //     { source: 'Javert', target: 'Valjean', value: 17 },
+  //     { source: 'Marius', target: 'Cosette', value: 21 },
+  //     { source: 'Enjolras', target: 'Marius', value: 7 },
+  //     { source: 'Gavroche', target: 'Valjean', value: 1 },
+  //   ],
+  // }
 
-  const data2: any = [
-    { year: '2019', height: 11, weight: 22, value: 54, category: 'A' },
-    { year: '2020', height: 10, weight: 160, value: 90, category: 'A' },
-    { year: '2021', height: 170, weight: 29, value: 62, category: 'A' },
-    { year: '2022', height: 190, weight: 120, value: 20, category: 'A' },
-    { year: '2023', height: 180, weight: 160, value: 10, category: 'A' },
-    { year: '2024', height: 190, weight: 220, value: 60, category: 'A' },
-    { year: '2019', height: 11, weight: 12, value: 54, category: 'C' },
-    { year: '2020', height: 10, weight: 60, value: 90, category: 'C' },
-    { year: '2021', height: 190, weight: 129, value: 62, category: 'C' },
-    { year: '2022', height: 80, weight: 10, value: 20, category: 'C' },
-    { year: '2023', height: 180, weight: 60, value: 10, category: 'C' },
-    { year: '2024', height: 280, weight: 20, value: 60, category: 'C' },
-  ]
-  const b = {
-    id: 'aa',
-    title: 'aa',
-    description: 'aa',
-    allowedInteractionType: '',
-    interactionType: '',
-    interactionKey: '',
-  }
+  // const data2: any = [
+  //   { year: '2019', height: 51, weight: 22, value: 54 },
+  //   { year: '2020', height: 80, weight: 160, value: 90 },
+  //   { year: '2021', height: 70, weight: 29, value: 62 },
+  //   { year: '2022', height: 90, weight: 120, value: 20 },
+  //   { year: '2023', height: 80, weight: 160, value: 10 },
+  //   { year: '2024', height: 90, weight: 220, value: 60 },
+  // ]
   // const curConfig: ConfigItem[] = [
+  // 讲解：[]中可以有很多个{},每个{}对应一个视图
   //   {
-  //     id: 'aa',
-  //     title: 'aa',
-  //     description: 'aa',
-  //     allowedInteractionType: '',
-  //     interactionType: '',
-  //     interactionKey: '',
-  //     name: 'BarVertical',
-  //     data: [
-  //       { 'Disease Type': 'Asthma', Recovered: 'No', Count: 1 },
-  //       { 'Disease Type': 'Asthma', Recovered: 'Yes', Count: 1 },
-  //       { 'Disease Type': 'Bronchitis', Recovered: 'No', Count: 1 },
-  //       { 'Disease Type': 'Bronchitis', Recovered: 'Yes', Count: 2 },
-  //       { 'Disease Type': 'COPD', Recovered: 'Yes', Count: 1 },
-  //       { 'Disease Type': 'Lung Cancer', Recovered: 'No', Count: 1 },
-  //       { 'Disease Type': 'Lung Cancer', Recovered: 'Yes', Count: 1 },
-  //       { 'Disease Type': 'Pneumonia', Recovered: 'Yes', Count: 3 },
-  //     ],
-  //     meta: {
-  //       width: '60%',
-  //       height: '60%',
-  //       left: '20%',
-  //       top: '10%',
+  //     id: 'aa',//讲解：每一个图表都有一个自己的id方便大模型识别
+  //     title: "Every year's item height situation",//讲解：图表题目
+  //     description: 'aa',//讲解：图表简介，方便大模型理解
+  //     allowedInteractionType: 'ycy14582',//讲解：需要说明该图表运行允许接收的交互信号是什么
+  //     interactionType: '1441abc',//讲解：需要说明该图表发出的交互信号是什么
+  //     interactionKey: 'height',//讲解：需要说明该交互信号作用在哪个可视化通道上
+  //     name: 'ArcDiagram',//讲解：说明绘制什么可视化图表
+  //     data: data1,
+  //     meta: {        //讲解：指明这个可视化图表在视图中的相对位置
+  //       width: '80%',
+  //       height: '80%',
+  //       left: '5%',
+  //       top: '5%',
   //     },
-  //     x: 'Disease Type',
-  //     y: 'Count',
-  //     legendBy: 'Recovered',
+  //     x: 'year',
+  //     y: 'height',
+  //     legendBy: 'category',
   //     legend: {
   //       open: true,
   //       legendPosition: 'top-right',
@@ -169,36 +144,21 @@ const MainView: React.FC<MainViewProps> = ({ offset }) => {
   //     },
   //     tooltip: {
   //       open: true,
-  //       text: '{x} - {Recovered}: {y} patients',
+  //       text: '{x} 年的高度是 {y}',
   //     },
   //   },
   // ]
 
-  // 地图数据测试样例
-
   if (curConfig) {
+    // 讲解：将配置项curConfig传给Chart组件，chart组件内部使用Easychart进行绘制，
+    // left和top是可视化系统用来拖拽图表的，单纯研究Easychart可以不管这个参数
     const renderComponents = curConfig.map(
       (item: ConfigItem, index: number) => (
         <Chart key={index} item={item} left={left} top={top} />
       )
     )
 
-    return (
-      <div>
-        {renderComponents}
-        {/* <div
-          className="download"
-          style={{
-            position: 'absolute',
-            left: '95%',
-            top: '95%',
-            cursor: 'pointer',
-          }}
-          onClick={handleDownload}>
-          <DownloadOutlined />
-        </div> */}
-      </div>
-    )
+    return <div>{renderComponents}</div>
   }
 
   return <div></div>

@@ -7,12 +7,12 @@ export default function calculateMargin(
       return { top: 40, right: 20, bottom: 40, left: 60 }
     }
     if (legendPos === 'top-right') {
-      return { top: 40, right: 20, bottom: 40, left: 60 }
+      return { top: 40, right: 100, bottom: 40, left: 60 }
     }
     if (legendPos === 'bottom-left') {
       return { top: 20, right: 20, bottom: 60, left: 60 }
     }
-    if (legendPos === 'bottom-left') {
+    if (legendPos === 'bottom-right') {
       return { top: 20, right: 20, bottom: 60, left: 60 }
     }
     return { top: 30, right: 20, bottom: 40, left: 60 }
@@ -22,7 +22,7 @@ export default function calculateMargin(
       return { top: 30, right: 20, bottom: 40, left: 140 }
     }
     if (legendPos === 'top-right') {
-      return { top: 30, right: 80, bottom: 40, left: 60 }
+      return { top: 30, right: 100, bottom: 40, left: 60 }
     }
     if (legendPos === 'bottom-left') {
       return { top: 30, right: 20, bottom: 40, left: 140 }
@@ -32,5 +32,5 @@ export default function calculateMargin(
     }
     return { top: 30, right: 20, bottom: 40, left: 60 }
   }
-  return { top: 30, right: 80, bottom: 40, left: 60 }
+  return { top: 30, right: 100, bottom: 40, left: 60 }
 }
